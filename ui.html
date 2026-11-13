@@ -1,0 +1,3125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>DarkBox — by Hamii</title>
+<style>
+  @font-face{font-family:"Inter"; src:url("fonts/inter.woff2") format("woff2");
+    font-weight:400 700; font-style:normal; font-display:swap}
+  @font-face{font-family:"Fraunces"; src:url("fonts/fraunces.woff2") format("woff2");
+    font-weight:500 600; font-style:normal; font-display:swap}
+  @font-face{font-family:"Fraunces"; src:url("fonts/fraunces-i.woff2") format("woff2");
+    font-weight:500 600; font-style:italic; font-display:swap}
+  :root{
+    --paper:#FAF8F5; --card:#FFFFFF; --ink:#1C1A24; --muted:#71697E;
+    --line:#EAE5DC; --purple:#6D28D9; --purple2:#7C3AED;
+    --accent-rgb:109,40,217; --accent2-rgb:124,58,237;
+    --deep1:#241545; --deep2:#3B1470; --pad-c1:#6D28D9; --pad-c2:#7C3AED;
+    --purple-soft:#F1EAFB; --green:#1E7B34; --green-soft:#E7F4E9;
+    --red:#B3261E; --red-soft:#FBEAE8;
+    --shadow:0 12px 32px rgba(31,22,64,.07), 0 2px 6px rgba(31,22,64,.05);
+    --shadow-lg:0 24px 60px rgba(31,22,64,.13), 0 4px 14px rgba(31,22,64,.06);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-user-select:none;user-select:none}
+  html,body{height:100%}
+  body{
+    font-family:"Inter","Segoe UI",system-ui,sans-serif; color:var(--ink); background:var(--paper);
+    overflow:hidden; font-size:14px;
+  }
+  body::before{
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+    background:
+      radial-gradient(560px 380px at 88% -6%, rgba(var(--accent2-rgb),.10), transparent 65%),
+      radial-gradient(520px 360px at -8% 108%, rgba(238,189,147,.16), transparent 65%);
+  }
+  .serif{font-family:"Fraunces",Georgia,serif}
+  input{ -webkit-user-select:text; user-select:text; font-family:"Inter","Segoe UI",sans-serif }
+  button{font-family:"Inter","Segoe UI",sans-serif; cursor:pointer; border:none; background:none}
+  ::-webkit-scrollbar{width:9px;height:9px}
+  ::-webkit-scrollbar-thumb{background:#D8D2E4;border-radius:99px;border:2px solid var(--paper)}
+  ::-webkit-scrollbar-track{background:transparent}
+
+  /* ---------- window chrome ---------- */
+  .winbtns{position:fixed; top:12px; right:14px; z-index:200; display:flex; gap:8px}
+  .winbtn{
+    width:38px; height:30px; border-radius:9px; background:rgba(255,255,255,.75);
+    border:1px solid var(--line); display:flex; align-items:center; justify-content:center;
+    transition:all .15s ease; backdrop-filter:blur(6px);
+  }
+  .winbtn:hover{background:#fff; box-shadow:var(--shadow)}
+  .winbtn.close:hover{background:var(--red); border-color:var(--red)}
+  .winbtn.close:hover svg *{stroke:#fff}
+  .winbtn svg{width:13px;height:13px}
+  .winbtn svg *{stroke:#4A4457; stroke-width:1.8; fill:none; stroke-linecap:round}
+  .dragzone{position:fixed; top:0; left:0; right:120px; height:52px; z-index:150}
+
+  /* ---------- screens ---------- */
+  .screen{display:none; height:100vh; position:relative; z-index:1}
+  .screen.active{display:flex; animation:fadeUp .38s cubic-bezier(.22,.9,.3,1)}
+  @keyframes fadeUp{from{opacity:0; transform:translateY(10px)} to{opacity:1; transform:none}}
+  @keyframes shake{10%,90%{transform:translateX(-1px)} 20%,80%{transform:translateX(2px)} 30%,50%,70%{transform:translateX(-4px)} 40%,60%{transform:translateX(4px)}}
+  .shake{animation:shake .45s ease}
+
+  /* ---------- auth (login / setup / unlock) ---------- */
+  .authwrap{flex:1; display:flex; align-items:center; justify-content:center; padding:30px}
+  .authcard{
+    background:var(--card); border:1px solid var(--line); border-radius:24px; box-shadow:var(--shadow-lg);
+    padding:38px 42px; width:480px; max-height:calc(100vh - 60px); overflow-y:auto;
+  }
+  .authcard.wide{width:860px}
+  .brandmark{
+    width:52px; height:52px; border-radius:15px; flex:none;
+    background:linear-gradient(135deg,var(--purple),var(--purple2));
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 10px 22px rgba(var(--accent-rgb),.32);
+  }
+  .brandmark svg{width:26px; height:26px}
+  .brandmark svg *{stroke:var(--on-accent); stroke-width:1.7; fill:none; stroke-linecap:round; stroke-linejoin:round}
+  .brandrow{display:flex; align-items:center; gap:15px}
+  .brandname{font-size:15px; font-weight:700; letter-spacing:.14em}
+  .brandsub{font-size:12px; color:var(--muted); margin-top:2px}
+  h1.display{font-family:"Fraunces",Georgia,serif; font-weight:400; font-size:34px; line-height:1.15; margin:26px 0 8px}
+  h1.display em{font-style:italic; color:var(--accent-ink)}
+  .lead{color:var(--muted); font-size:14px; line-height:1.55}
+  .cols{display:flex; gap:34px; margin-top:24px}
+  .col{flex:1}
+  .col h3{font-size:12px; letter-spacing:.12em; font-weight:700; color:var(--muted); margin-bottom:12px}
+  .divider-v{width:1px; background:var(--line)}
+  .field label{display:block; font-size:12px; font-weight:600; letter-spacing:.06em; color:var(--muted); margin:14px 0 7px}
+  .field input{
+    width:100%; padding:12px 14px; border:1.5px solid var(--line); border-radius:12px; font-size:15px;
+    background:#FCFBF9; color:var(--ink); outline:none; transition:border-color .15s, box-shadow .15s;
+  }
+  .field input:focus{border-color:var(--purple2); box-shadow:0 0 0 4px rgba(var(--accent2-rgb),.12); background:#fff}
+  .field select{
+    width:100%; padding:12px 40px 12px 14px; border:1.5px solid var(--line); border-radius:12px; font-size:15px;
+    background-color:#FCFBF9; color:var(--ink); outline:none; cursor:pointer; appearance:none; -webkit-appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1.5 1.8L6 6.2L10.5 1.8' fill='none' stroke='%238A84A0' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right 14px center;
+    transition:border-color .15s, box-shadow .15s;
+  }
+  .field select:focus{border-color:var(--purple2); box-shadow:0 0 0 4px rgba(var(--accent2-rgb),.12); background-color:#fff}
+  .field select option{background:var(--card); color:var(--ink)}
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    padding:12px 22px; border-radius:12px; font-size:14px; font-weight:600;
+    border:1.5px solid var(--line); background:#fff; color:var(--ink); transition:all .15s ease;
+  }
+  .btn:hover{box-shadow:var(--shadow); transform:translateY(-1px)}
+  .btn:active{transform:translateY(0)}
+  .btn.primary{
+    /* border:none (not transparent): a transparent border over a gradient
+       makes Chromium squeeze the whole gradient into the border strip,
+       which shows as a bright pink line on the button's edge. */
+    background:linear-gradient(135deg,var(--purple),var(--purple2)); color:var(--on-accent); border:none;
+    box-shadow:0 10px 24px rgba(var(--accent-rgb),.30);
+  }
+  .btn.primary:hover{box-shadow:0 14px 30px rgba(var(--accent-rgb),.38)}
+  .btn.primary:disabled{opacity:.45; box-shadow:none; cursor:default; transform:none}
+  .btn.block{width:100%; padding:14px}
+  .btn.danger:hover{border-color:var(--red); color:var(--red)}
+  .errtext{display:none; color:var(--red); background:var(--red-soft); border:1px solid #F3C6C2;
+    padding:10px 14px; border-radius:11px; font-size:13px; margin-top:16px; line-height:1.45}
+  .errtext.show{display:block}
+  .hint{font-size:12.5px; color:var(--muted); margin-top:10px; line-height:1.5}
+  .captured{display:none; margin-top:12px; font-size:13px; font-weight:600; color:var(--green)}
+  .captured.show{display:flex; align-items:center; gap:7px}
+  .captured button{color:var(--accent-ink); font-weight:600; font-size:13px; text-decoration:underline}
+
+  /* ---------- pattern pad ---------- */
+  .pad{
+    position:relative; width:236px; height:236px; margin:2px auto;
+    background:#FCFBF9; border:1.5px solid var(--line); border-radius:20px; touch-action:none;
+  }
+  .pad svg{position:absolute; inset:0; width:100%; height:100%; pointer-events:none}
+  .pad svg polyline, .pad svg line{stroke-width:5; fill:none;
+    stroke-linecap:round; stroke-linejoin:round; opacity:.85}
+  .dot{
+    position:absolute; width:34px; height:34px; margin:-17px 0 0 -17px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center; pointer-events:none;
+  }
+  .dot::before{content:""; width:13px; height:13px; border-radius:50%; background:#CFC8DE; transition:all .12s ease}
+  .dot.on::before{background:linear-gradient(135deg,var(--pad-c1),var(--pad-c2)); width:16px; height:16px; box-shadow:0 0 0 7px color-mix(in srgb, var(--pad-c1) 18%, transparent)} .pstop1{stop-color:var(--pad-c1)} .pstop2{stop-color:var(--pad-c2)}
+
+  /* ---------- admin layout ---------- */
+  #screen-admin{flex-direction:row}
+  .sidebar{
+    width:262px; flex:none; height:100vh; padding:30px 22px 22px; display:flex; flex-direction:column;
+    border-right:1px solid var(--line); background:rgba(255,255,255,.55); backdrop-filter:blur(8px);
+  }
+  .navitem{
+    display:flex; align-items:center; gap:11px; padding:11px 14px; border-radius:12px;
+    font-weight:600; font-size:14px; color:var(--muted); cursor:pointer; transition:all .15s; margin-top:4px;
+  }
+  .navitem svg{width:18px; height:18px}
+  .navitem svg *{stroke:currentColor; stroke-width:1.7; fill:none; stroke-linecap:round; stroke-linejoin:round}
+  .navitem:hover{background:#fff; color:var(--ink)}
+  .navitem.active{background:var(--purple-soft); color:var(--accent-ink); font-weight:600}
+  .sidefoot{margin-top:auto}
+  .sidecard{
+    background:linear-gradient(140deg,var(--deep1),var(--deep2)); color:#EDE8FA; border-radius:18px; padding:18px;
+    box-shadow:0 16px 34px rgba(36,21,69,.28);
+  }
+  .sidecard .t{font-family:"Fraunces",Georgia,serif; font-size:17px; margin-bottom:5px}
+  .sidecard .s{font-size:12px; line-height:1.55; color:#C9BCE8}
+  .main{flex:1; height:100vh; overflow-y:auto; padding:34px 30px 42px}
+  .mainhead{display:flex; align-items:flex-end; justify-content:space-between; gap:20px}
+  .mainhead .btn{flex:none; white-space:nowrap}
+  .authcard.wide{padding-top:30px; padding-bottom:26px}
+  #screen-setup h1.display{margin-top:20px}
+  #screen-unlock .authcard{padding:28px 38px}
+  .mainhead h1{font-family:"Fraunces",Georgia,serif; font-weight:400; font-size:36px; line-height:1.1}
+  .mainhead h1 em{font-style:italic; color:var(--accent-ink)}
+  .mainhead p{color:var(--muted); margin-top:7px; font-size:13.5px; max-width:520px; line-height:1.55}
+  .stats{display:flex; gap:16px; margin:26px 0 22px}
+  .stat{
+    flex:1 1 0; min-width:0; background:var(--card); border:1px solid var(--line); border-radius:18px; padding:16px 13px;
+    box-shadow:var(--shadow); display:flex; align-items:center; gap:15px;
+  }
+  .stat > div{min-width:0}
+  .stat .num{font-family:"Fraunces",Georgia,serif; font-size:24px; line-height:1; white-space:nowrap}
+  .stat .num.loading{color:var(--muted); animation:lpulse 1.1s ease-in-out infinite}
+  @keyframes lpulse{0%,100%{opacity:.3}50%{opacity:.85}}
+  .stat .lbl{font-size:9px; letter-spacing:.06em; font-weight:700; color:var(--muted); margin-top:5px; white-space:nowrap}
+  .stat .ico{width:34px; height:34px; border-radius:10px; background:var(--purple-soft);
+    display:flex; align-items:center; justify-content:center; flex:none}
+  .stat .ico svg{width:18px; height:18px}
+  .stat .ico svg *{stroke:var(--accent-ink); stroke-width:1.7; fill:none; stroke-linecap:round; stroke-linejoin:round}
+  .stat.green .ico{background:var(--green-soft)} .stat.green .ico svg *{stroke:var(--green)}
+
+  .foldercard{
+    background:var(--card); border:1px solid var(--line); border-radius:18px; box-shadow:var(--shadow);
+    padding:16px; display:flex; align-items:center; gap:11px; margin-bottom:12px;
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .foldercard .fbtn{padding:8px 11px}
+  .iconbtns .fbtn{padding:7px}
+  .foldercard .pill{padding:6px 10px}
+  .foldercard:hover{transform:translateY(-2px); box-shadow:var(--shadow-lg)}
+  .ftile{width:48px; height:48px; border-radius:13px; flex:none; display:flex; align-items:center; justify-content:center;
+    background:linear-gradient(135deg,var(--purple),var(--purple2)); box-shadow:0 8px 18px rgba(var(--accent-rgb),.28)}
+  .ftile.open{background:linear-gradient(135deg,#D9D2E8,#C9BEE4); box-shadow:none}
+  .ftile svg{width:24px; height:24px}
+  .ftile svg *{stroke:var(--on-accent); stroke-width:1.6; fill:none; stroke-linecap:round; stroke-linejoin:round}
+  .ftile.open svg *{stroke:#5B4B8A}
+  .finfo{flex:1; min-width:0}
+  .fname{font-family:"Fraunces",Georgia,serif; font-size:16.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .fpath{font-size:12px; color:var(--muted); margin-top:3px; display:flex; align-items:center; gap:6px}
+  .fpath .fpath-t{white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0}
+  .fpath .fsize{flex:none}
+  .fpath .owntag{flex:none}
+  .pill{font-size:11px; font-weight:700; letter-spacing:.09em; padding:6px 12px; border-radius:99px; flex:none}
+  .pill.locked{background:linear-gradient(135deg,var(--purple),var(--purple2)); color:var(--on-accent)}
+  .pill.open{background:var(--green-soft); color:var(--green)}
+  .fbtn{padding:9px 18px; border-radius:11px; font-weight:600; font-size:13.5px; border:1.5px solid var(--line);
+    background:#fff; transition:all .15s; flex:none}
+  .fbtn:hover{box-shadow:var(--shadow)}
+  .fbtn.primary{background:linear-gradient(135deg,var(--purple),var(--purple2)); color:var(--on-accent); border:none;
+    box-shadow:0 8px 18px rgba(var(--accent-rgb),.26)}
+  .fbtn.ghost{border-color:transparent; color:var(--muted)}
+  .fbtn.ghost:hover{color:var(--red); box-shadow:none; background:var(--red-soft)}
+  .empty{
+    border:1.8px dashed #D9D2E4; border-radius:18px; padding:34px; text-align:center; color:var(--muted);
+    background:rgba(255,255,255,.5); line-height:1.6;
+  }
+  .empty .big{font-family:"Fraunces",Georgia,serif; font-size:19px; color:var(--ink); margin-bottom:4px}
+  .card{
+    background:var(--card); border:1px solid var(--line); border-radius:20px; box-shadow:var(--shadow);
+    padding:24px 26px; margin-top:22px;
+  }
+  .card h2{font-family:"Fraunces",Georgia,serif; font-weight:400; font-size:22px}
+  .card .sub{color:var(--muted); font-size:13px; margin-top:5px; line-height:1.55}
+  .setrow{display:flex; align-items:center; justify-content:space-between; gap:20px; padding:14px 0; border-bottom:1px solid #F1EDE4}
+  .setrow:last-child{border-bottom:none}
+  .setrow .t{font-weight:600; font-size:14px}
+  .setrow .d{font-size:12.5px; color:var(--muted); margin-top:2px; line-height:1.45}
+  .switch{position:relative; width:48px; height:27px; flex:none; cursor:pointer}
+  .switch input{display:none}
+  .switch .tr{position:absolute; inset:0; border-radius:99px; background:#DCD6E8; transition:all .2s; box-shadow:inset 0 0 0 1px rgba(20,16,31,.14)}
+  .switch .tr::after{content:""; position:absolute; top:3px; left:3px; width:21px; height:21px; border-radius:50%;
+    background:#fff; box-shadow:0 2px 6px rgba(0,0,0,.22); transition:all .2s}
+  .switch input:checked + .tr{background:linear-gradient(135deg,var(--purple),var(--purple2))}
+  .switch input:checked + .tr::after{left:24px}
+  .btnrow{display:flex; gap:12px; margin-top:16px; flex-wrap:wrap}
+
+  /* ---------- v3.3: wordmark logo ---------- */
+  /* The logo PNG is used as a MASK: its shape is filled with the theme
+     gradient, so the logo follows the chosen colors — with readability
+     tones (--logo-c1/c2) so it never vanishes on white/black picks. */
+  .wordmark{
+    background:linear-gradient(135deg, var(--logo-c1, #6D28D9), var(--logo-c2, #9333EA));
+    -webkit-mask-image:url("logo.png"); mask-image:url("logo.png");
+    -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat;
+    -webkit-mask-size:contain; mask-size:contain;
+    -webkit-mask-position:left center; mask-position:left center;
+  }
+  .wordmark.side{width:176px; height:41px}
+  .wordmark.auth{width:164px; height:38px}
+
+  /* ---------- v3.3: activity ---------- */
+  .actrow{display:flex; gap:13px; padding:11px 2px; border-bottom:1px solid var(--line); align-items:flex-start}
+  .actrow:last-child{border-bottom:none}
+  .actdot{width:9px; height:9px; border-radius:50%; margin-top:6px; flex:none; background:var(--purple)}
+  .actrow.warn .actdot{background:#D97706}
+  .actrow.bad .actdot{background:#DC2626}
+  .actrow .at{flex:1; min-width:0}
+  .actrow .tx{font-size:13.5px; font-weight:550}
+  .actrow .tm{font-size:12px; color:var(--muted); margin-top:1px}
+  .actrow img{width:76px; height:57px; object-fit:cover; border-radius:9px; flex:none}
+
+  /* ---------- v3.3: freeze banner ---------- */
+  .freeze{display:none; margin-top:16px; padding:12px 15px; border-radius:13px; background:#FDECEC; color:#8C1D18; font-size:13.5px; font-weight:600; text-align:center}
+  .freeze.show{display:block}
+  body.dark .freeze{background:#3A1420; color:#F3A9A0}
+  body.frozen .pad, body.frozen .unlock-auth input, body.frozen #login-pass{pointer-events:none; opacity:.5}
+
+  /* ---------- v3.3: folder extras ---------- */
+  .fnote{font-size:12.5px; color:var(--muted); font-style:italic; margin-top:2px}
+  .fsize{color:var(--muted); font-weight:400}
+  .owntag{display:inline-block; font-size:10px; font-weight:700; letter-spacing:.07em; padding:2.5px 8px; border-radius:99px; background:var(--purple-soft); color:var(--accent-ink); margin-left:8px; vertical-align:2px; font-style:normal}
+  .iconbtns{display:flex; gap:6px; flex:none}
+  .iconbtns .fbtn svg *{stroke:currentColor; fill:none; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round}
+  .ftile .ltr{font-family:"Fraunces",Georgia,serif; font-size:21px; font-weight:600; color:var(--on-accent)}
+  #colorpop{position:fixed; z-index:400; display:none; background:var(--card); border-radius:15px; box-shadow:var(--shadow-lg); padding:13px; width:200px}
+  #colorpop.show{display:block}
+  #colorpop .t{font-size:11px; font-weight:700; letter-spacing:.07em; color:var(--muted); margin-bottom:9px}
+  #colorpop .grid{display:flex; flex-wrap:wrap; gap:8px}
+  #colorpop .cp{width:30px; height:30px; border-radius:9px; cursor:pointer; border:none; padding:0}
+  #colorpop .cp.auto{display:flex; align-items:center; justify-content:center; background:var(--purple-soft); color:var(--accent-ink); font-size:10.5px; font-weight:700; width:auto; padding:0 11px}
+
+  /* ---------- v3.3.1: centered login + sidebar ---------- */
+  #screen-login .authcard{text-align:center; padding-top:32px; padding-bottom:30px}
+  #screen-login .wordmark{margin:0 auto; -webkit-mask-position:center; mask-position:center}
+  #screen-login .lead{max-width:350px; margin-left:auto; margin-right:auto}
+  #screen-login h1.display{margin-top:20px}
+  #screen-login .field label{text-align:center}
+  #screen-login #login-pass{text-align:center}
+  #screen-login .errtext{text-align:center}
+  .wordmark.side{margin:0 auto; -webkit-mask-position:center; mask-position:center}
+  .sidecard .t, .sidecard .s{text-align:center}
+  .actrow img{cursor:pointer}
+  #modal-photo .modal{width:560px; max-width:92vw; max-height:calc(100vh - 48px); overflow-y:auto}
+  #modal-photo img.big{width:100%; max-height:52vh; object-fit:contain; background:#0A0D1C; border-radius:14px; display:block}
+  /* ------- v3.3.4: in-app folder picker ------- */
+  #modal-browse .modal{width:700px; max-width:94vw}
+  .bbar{display:flex; align-items:center; gap:10px; margin-top:18px}
+  .bup{width:38px; height:38px; flex:none; border-radius:11px; border:1.5px solid var(--line); background:var(--card);
+    color:var(--ink); cursor:pointer; display:flex; align-items:center; justify-content:center}
+  .bup:hover{border-color:var(--purple)}
+  .bup:disabled{opacity:.35; cursor:default}
+  .bup svg{width:17px; height:17px}
+  .bup svg *{stroke:currentColor; stroke-width:2; fill:none; stroke-linecap:round; stroke-linejoin:round}
+  .crumbs{flex:1; min-width:0; display:flex; align-items:center; gap:2px; flex-wrap:wrap; background:var(--purple-soft);
+    border-radius:11px; padding:7px 10px; font-size:13px; min-height:38px}
+  .crumb{cursor:pointer; font-weight:650; color:var(--accent-ink); padding:3px 7px; border-radius:7px; white-space:nowrap}
+  .crumb:hover{background:rgba(255,255,255,.6)}
+  body.dark .crumb:hover{background:rgba(255,255,255,.09)}
+  .crumb.now{cursor:default; color:var(--ink)}
+  .crumbsep{color:var(--muted); font-size:11px}
+  .bwrap{display:flex; gap:14px; margin-top:14px}
+  .brail{width:158px; flex:none; display:flex; flex-direction:column; gap:2px}
+  .brail .plh{font-size:10.5px; font-weight:700; letter-spacing:.09em; color:var(--muted); padding:6px 10px 4px}
+  .brail .pl{display:flex; align-items:center; gap:9px; padding:8px 10px; border-radius:10px; font-size:13px;
+    font-weight:600; color:var(--muted); cursor:pointer}
+  .brail .pl:hover{background:var(--purple-soft); color:var(--ink)}
+  .brail .pl.on{background:var(--purple-soft); color:var(--accent-ink)}
+  .brail .pl svg{width:16px; height:16px; flex:none}
+  .brail .pl svg *{stroke:currentColor; stroke-width:1.7; fill:none; stroke-linecap:round; stroke-linejoin:round}
+  .blist{flex:1; min-width:0; height:296px; overflow-y:auto; border:1px solid var(--line); border-radius:14px; padding:6px; background:var(--card)}
+  .brow{display:flex; align-items:center; gap:11px; padding:9px 11px; border-radius:10px; cursor:pointer; font-size:13.5px; font-weight:550; user-select:none}
+  .brow:hover{background:var(--purple-soft)}
+  .brow.sel{background:var(--purple-soft); box-shadow:inset 0 0 0 1.5px var(--purple)}
+  .brow svg{width:19px; height:19px; flex:none}
+  .brow svg *{stroke:var(--accent-ink); stroke-width:1.6; fill:none; stroke-linecap:round; stroke-linejoin:round}
+  .brow .bn{white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .bempty{padding:30px 20px; text-align:center; color:var(--muted); font-size:13px; line-height:1.6}
+  .bfoot{display:flex; align-items:center; gap:12px; margin-top:16px}
+  .bsel{flex:1; min-width:0; font-size:12.5px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .bsel b{color:var(--ink)}
+  .bnew{display:none; gap:10px; margin-top:12px}
+  .bnew.show{display:flex}
+  .bnew input{flex:1; min-width:0; padding:11px 14px; border:1.5px solid var(--line); border-radius:11px;
+    background:var(--card); color:var(--ink); font:inherit; font-size:13.5px; outline:none}
+  .bnew input:focus{border-color:var(--purple)}
+  /* ------- passcode PIN pad (iPhone style) ------- */
+  .pinpad{display:flex; flex-direction:column; align-items:center; gap:18px; padding:4px 0 2px}
+  .pindots{display:flex; gap:12px; height:14px; align-items:center}
+  .pindots i{width:12px; height:12px; border-radius:50%; border:1.5px solid var(--muted); display:block; transition:all .15s}
+  .pindots i.on{background:var(--ink); border-color:var(--ink); transform:scale(1.1)}
+  .pindots.shake{animation:pinshake .45s}
+  @keyframes pinshake{10%,90%{transform:translateX(-1px)}20%,80%{transform:translateX(2px)}30%,50%,70%{transform:translateX(-4px)}40%,60%{transform:translateX(4px)}}
+  .pinkeys{display:grid; grid-template-columns:repeat(3, 68px); gap:13px 16px}
+  .pinkey{width:68px; height:68px; border-radius:50%; border:1.5px solid var(--line); background:var(--card);
+    color:var(--ink); font:inherit; cursor:pointer; display:flex; flex-direction:column; align-items:center;
+    justify-content:center; transition:all .12s; user-select:none; padding:0}
+  .pinkey .d{font-size:25px; font-weight:600; line-height:1}
+  .pinkey .l{font-size:8.5px; letter-spacing:.14em; color:var(--muted); margin-top:2px; font-weight:700}
+  .pinkey:hover{border-color:var(--purple)}
+  .pinkey:active{background:var(--purple); border-color:var(--purple); color:#fff; transform:scale(.94)}
+  .pinkey:active .l{color:rgba(255,255,255,.75)}
+  .pinkey.fn{background:transparent; border-color:transparent; font-size:20px; color:var(--muted)}
+  .pinkey.fn:hover{color:var(--ink); border-color:transparent}
+  .pinkey.fn:active{background:transparent; color:var(--ink)}
+  .pinpad.small .pinkeys{grid-template-columns:repeat(3, 54px); gap:9px 12px}
+  .pinpad.small .pinkey{width:54px; height:54px}
+  .pinpad.small .pinkey .d{font-size:20px}
+  .pinpad.small{gap:11px}
+  /* setup: single-method card, unlock-style (Pattern default, Passcode tab) */
+  #screen-setup .authcard{text-align:center; padding:24px 34px 16px}
+  #screen-setup .kbdlink{margin-top:8px}
+  #screen-setup .wordmark{margin:0 auto; -webkit-mask-position:center; mask-position:center}
+  #screen-setup .errtext{margin-top:14px}
+  #screen-setup h1.display{font-size:29px; margin:16px 0 6px}
+  #screen-setup .lead{font-size:13.5px}
+  #screen-setup .pinpad{gap:9px}
+  #screen-setup .pinkeys{grid-template-columns:repeat(3, 50px); gap:8px 11px}
+  #screen-setup .pinkey{width:50px; height:50px}
+  #screen-setup .pinkey .d{font-size:19px}
+  /* v4.0: folders search/sort bar + encryption tags */
+  .foldersbar{display:flex; gap:12px; align-items:center; margin:0 0 14px; flex-wrap:wrap}
+  .searchwrap{flex:1; min-width:220px; display:flex; align-items:center; gap:9px; background:var(--card);
+    border:1px solid var(--line); border-radius:13px; padding:0 14px; height:44px}
+  .searchwrap svg{width:17px; height:17px; stroke:var(--muted); fill:none; stroke-width:2; flex:none}
+  .searchwrap input{flex:1; border:none; background:none; font:inherit; font-size:13.5px; color:var(--ink); outline:none}
+  .enctag{display:inline-block; font-size:9px; font-weight:700; letter-spacing:.07em; padding:2.5px 7px;
+    border-radius:20px; background:color-mix(in srgb, var(--accent) 13%, transparent); color:var(--accent-ink); vertical-align:2px}
+  .enctag.pend{background:#FBF3E2; color:#8A6D1F}
+  /* v4.2.0: per-folder lock mode tag — Just Lock is the plain default,
+     High End gets the accent treatment like the encryption tag. */
+  .modetag{display:inline-block; font-size:9px; font-weight:700; letter-spacing:.07em; padding:2.5px 7px;
+    border-radius:20px; background:var(--soft); color:var(--muted); vertical-align:2px}
+  .modetag.high{background:color-mix(in srgb, var(--accent) 13%, transparent); color:var(--accent-ink)}
+  .modeopt.on{border-color:var(--accent); background:color-mix(in srgb, var(--accent) 10%, transparent)}
+  .reccode{font-family:Consolas,monospace; font-size:21px; letter-spacing:.12em; text-align:center;
+    background:var(--soft); border:1px dashed var(--line); border-radius:12px; padding:16px 10px; margin:14px 0 6px}
+  /* v4.0.3 Lite Mode: no backdrop blur, no heavy shadows, no animations —
+     weak GPUs/CPUs stay smooth. Toggled in Settings (auto on small PCs). */
+  body.lite *, body.lite *::before, body.lite *::after{
+    backdrop-filter:none !important; -webkit-backdrop-filter:none !important;
+    animation:none !important; transition:none !important;
+  }
+  body.lite .card, body.lite .foldercard, body.lite .authcard, body.lite .stat,
+  body.lite .modal, body.lite .sidecard{
+    box-shadow:0 2px 10px rgba(30,20,60,.07) !important;
+  }
+  body.lite .overlay{background:rgba(28,22,46,.5)}
+  body.lite #busy{background:rgba(14,10,28,.65)}
+  /* tab-switch animation (setup / login / unlock panes) */
+  @keyframes paneIn{from{opacity:0; transform:translateY(10px) scale(.995)} to{opacity:1; transform:none}}
+  .pane-in{animation:paneIn .28s cubic-bezier(.22,.8,.3,1) both}
+  .seg button{transition:all .22s ease}
+  /* short windows (small laptop screens / display scaling): compact setup so
+     nothing ever scrolls */
+  @media (max-height: 690px){
+    #screen-setup .authcard{padding:18px 30px 14px}
+    #screen-setup h1.display{font-size:26px; margin:12px 0 4px}
+    #screen-setup .lead{font-size:13px}
+    #screen-setup .pad{width:204px; height:204px}
+    #screen-setup .pinkeys{grid-template-columns:repeat(3, 44px); gap:7px 10px}
+    #screen-setup .pinkey{width:44px; height:44px}
+    #screen-setup .pinkey .d{font-size:17px}
+    #screen-setup .pindots{gap:7px}
+    #screen-setup .pindot{width:10px; height:10px}
+  }
+  #screen-installer .wordmark{margin:0 auto; -webkit-mask-position:center; mask-position:center}
+  .kbdlink{display:block; margin:14px auto 0; background:none; border:none; color:var(--accent-ink);
+    font:inherit; font-size:12.5px; font-weight:650; cursor:pointer; text-align:center; width:fit-content}
+  .kbdlink:hover{text-decoration:underline}
+  body.frozen .pinpad{pointer-events:none; opacity:.5}
+  /* ------- installer wizard ------- */
+  .feat{display:flex; gap:13px; align-items:flex-start; text-align:left; padding:8px 0}
+  .feat .fic{width:38px; height:38px; flex:none; border-radius:11px; background:var(--purple-soft); display:flex; align-items:center; justify-content:center}
+  .feat .fic svg{width:19px; height:19px}
+  .feat .fic svg *{stroke:var(--accent-ink); stroke-width:1.7; fill:none; stroke-linecap:round; stroke-linejoin:round}
+  .feat b{display:block; font-size:14px}
+  .feat span{font-size:12.5px; color:var(--muted); line-height:1.5; display:block; margin-top:1px}
+  .doneick{width:74px; height:74px; margin:4px auto 0; border-radius:50%; background:var(--green-soft); display:flex; align-items:center; justify-content:center}
+  .doneick svg{width:36px; height:36px}
+  .doneick svg *{stroke:var(--green); stroke-width:2.4; fill:none; stroke-linecap:round; stroke-linejoin:round}
+
+  /* ---------- modal / toast ---------- */
+  .overlay{position:fixed; inset:0; z-index:300; background:rgba(28,22,46,.34); backdrop-filter:blur(5px);
+    display:none; align-items:center; justify-content:center}
+  .overlay.show{display:flex; animation:fadeUp .25s ease}
+  .modal{background:var(--card); border-radius:22px; box-shadow:var(--shadow-lg); padding:30px 32px; width:430px;
+    max-height:calc(100vh - 70px); overflow-y:auto}
+  .modal h2{font-family:"Fraunces",Georgia,serif; font-weight:400; font-size:24px; margin-bottom:8px}
+  .modal p{color:var(--muted); font-size:13.5px; line-height:1.55}
+  #toast{
+    position:fixed; left:50%; bottom:26px; transform:translate(-50%, 20px); z-index:400; opacity:0;
+    background:#241B38; color:#F2EEFA; padding:13px 22px; border-radius:13px; font-size:13.5px; font-weight:600;
+    box-shadow:0 18px 40px rgba(20,12,40,.35); transition:all .3s cubic-bezier(.22,.9,.3,1); pointer-events:none;
+    max-width:82vw; text-align:center;
+  }
+  #toast.show{opacity:1; transform:translate(-50%,0)}
+  #toast.error{background:#5C1712}
+
+  /* ---------- appearance (seg / swatches / color) ---------- */
+  .seg{display:inline-flex; background:var(--purple-soft); border-radius:12px; padding:3px; gap:2px}
+  .seg button{padding:8px 20px; border-radius:9px; font-weight:600; font-size:13.5px; color:var(--muted); transition:all .15s}
+  .seg button.on{background:#fff; color:var(--ink); box-shadow:var(--shadow)}
+  .swatches{display:flex; gap:9px; flex-wrap:wrap; justify-content:flex-end}
+  .sw{width:30px; height:30px; border-radius:50%; cursor:pointer; border:2px solid rgba(0,0,0,.08);
+    transition:transform .13s ease; padding:0}
+  .sw:hover{transform:scale(1.14)}
+  .sw.on{border-color:var(--ink); transform:scale(1.14); box-shadow:0 0 0 3px var(--card), 0 0 0 5px var(--ink)}
+  .colorpick{display:flex; align-items:center; gap:11px; cursor:pointer; font-weight:600; font-size:13.5px}
+  .colorpick input[type=color]{width:46px; height:34px; border:1.5px solid var(--line); border-radius:10px;
+    background:var(--card); cursor:pointer; padding:2px}
+  .colorpick input[type=color]::-webkit-color-swatch-wrapper{padding:2px}
+  .colorpick input[type=color]::-webkit-color-swatch{border:none; border-radius:7px}
+  .btn.primary svg *{stroke:var(--on-accent)}
+  .grads{display:flex; gap:9px; flex-wrap:wrap; justify-content:flex-end; max-width:300px}
+  .gr{width:44px; height:30px; border-radius:9px; cursor:pointer; border:none;
+    box-shadow:inset 0 0 0 2px rgba(0,0,0,.10);
+    transition:transform .13s ease; padding:0}
+  .gr:hover{transform:scale(1.1)}
+  .gr.on{transform:scale(1.1); box-shadow:inset 0 0 0 2px rgba(0,0,0,.10), 0 0 0 3px var(--card), 0 0 0 5px var(--ink)}
+
+  /* ---------- unlock (same components as the admin panel) ---------- */
+  .unlockwrap{flex:1; display:flex; flex-direction:column; gap:14px;
+    padding:60px 24px 18px; overflow-y:auto; width:100%}
+  .unlock-brand{display:flex; align-items:center; gap:12px; padding:0 4px}
+  .unlock-folder{margin:0}
+  .unlock-auth{padding:22px 24px 24px; margin:0}
+  .unlock-auth h3{font-family:"Fraunces",Georgia,serif; font-size:21px; font-weight:600}
+  .unlock-auth .sub{font-size:13px; color:var(--muted); margin-top:3px}
+  #unlock-tabs{margin:16px 0 4px}
+  #unlock-pattern-block{margin-top:12px}
+  #unlock-pass-block{margin-top:14px}
+  .unlock-note{margin-top:auto; padding-top:6px; font-size:12px; color:var(--muted); text-align:center; line-height:1.6}
+  .unlock-note b{color:var(--accent-ink); font-weight:700; letter-spacing:.1em; font-size:11px}
+
+  /* ---------- admin pages (tab-style sections) ---------- */
+  .page{display:none}
+  .page.active{display:block; animation:fadeUp .3s ease}
+
+  /* ---------- developer page ---------- */
+  .devhead{display:flex; gap:18px; align-items:flex-start}
+  .devava{width:74px; height:74px; flex:none; border-radius:20px; color:var(--on-accent);
+    background:linear-gradient(135deg,var(--purple),var(--purple2));
+    display:flex; align-items:center; justify-content:center; overflow:hidden;
+    font-family:"Fraunces",Georgia,serif; font-size:27px; font-weight:600;
+    box-shadow:0 12px 26px rgba(var(--accent-rgb),.35)}
+  .devava img{width:100%; height:100%; object-fit:cover; display:block}
+  .devname{font-family:"Fraunces",Georgia,serif; font-size:24px; font-weight:600}
+  .devrole{color:var(--accent-ink); font-weight:600; font-size:13.5px; margin-top:2px}
+  .devbio{color:var(--muted); font-size:13.5px; margin-top:8px; line-height:1.65; max-width:560px}
+  .devgrid{display:grid; grid-template-columns:1fr 1fr; gap:0 28px; margin-top:20px; border-top:1px solid var(--line)}
+  .devrow{display:flex; justify-content:space-between; gap:14px; padding:11px 0;
+    border-bottom:1px solid var(--line); font-size:13.5px}
+  .devrow .k{color:var(--muted); font-weight:600}
+  .devrow a{color:var(--accent-ink); font-weight:600; cursor:pointer; text-decoration:none}
+  .devrow a:hover{text-decoration:underline}
+
+  /* ---------- busy overlay (authorizing) ---------- */
+  #busy{position:fixed; inset:0; z-index:350; background:rgba(14,10,28,.5); backdrop-filter:blur(7px);
+    display:none; align-items:center; justify-content:center; flex-direction:column}
+  #busy.show{display:flex; animation:fadeUp .25s ease}
+  .spinner{width:78px; height:78px; animation:rot 1.5s linear infinite}
+  .spinner .ring{fill:none; stroke:rgba(255,255,255,.22); stroke-width:2.6}
+  .spinner .arc{fill:none; stroke:#FFFFFF; stroke-width:2.6; stroke-linecap:round;
+    stroke-dasharray:38 90; animation:arcspin 1.1s linear infinite reverse; transform-origin:center}
+  .spinner .arc2{stroke:var(--purple2); stroke-dasharray:20 60}
+  @keyframes rot{to{transform:rotate(360deg)}}
+  @keyframes arcspin{to{transform:rotate(-360deg)}}
+  #busy-text{color:#fff; font-weight:600; font-size:15px; letter-spacing:.05em; margin-top:16px}
+  /* v4.1.0: preloader progress — the add/lock bar. Without it the spinner
+     alone made a 3-minute encryption look frozen. */
+  #busy-barwrap{width:260px; max-width:70vw; height:8px; border-radius:99px; background:rgba(255,255,255,.22); margin-top:16px; overflow:hidden; display:none}
+  #busy-barwrap.show{display:block}
+  #busy-bar{height:100%; width:0%; border-radius:99px; background:linear-gradient(90deg,var(--purple2),#fff); transition:width .3s ease}
+  #busy-pct{color:rgba(255,255,255,.85); font-size:12.5px; font-weight:600; margin-top:8px; display:none}
+  #busy-pct.show{display:block}
+  /* v4.1.0: per-folder progress bar, shown under the folder's own row
+     while it is being locked/encrypted. */
+  .fprog{height:6px; border-radius:99px; background:var(--purple-soft); margin-top:7px; overflow:hidden}
+  .fprog i{display:block; height:100%; width:0%; border-radius:99px; background:linear-gradient(90deg,var(--purple),var(--purple2)); transition:width .3s ease}
+  .fprog-t{font-size:11.5px; color:var(--muted); font-weight:600; margin-top:4px}
+  .enctag.pend{cursor:help}
+  /* v4.1.0: Activity redesign — filters, search, date groups, intruder cards */
+  .act-tools{display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:14px}
+  .act-search{flex:1; min-width:200px; display:flex; align-items:center; gap:9px; background:var(--card);
+    border:1px solid var(--line); border-radius:12px; padding:0 13px; height:40px}
+  .act-search svg{width:16px; height:16px; stroke:var(--muted); fill:none; stroke-width:2; flex:none}
+  .act-search input{flex:1; border:none; background:none; font:inherit; font-size:13px; color:var(--ink); outline:none}
+  .act-chips{display:flex; gap:6px; flex-wrap:wrap}
+  .act-chips button{padding:7px 13px; border-radius:99px; border:1.5px solid var(--line); background:var(--card);
+    color:var(--muted); font:inherit; font-size:12.5px; font-weight:650; cursor:pointer}
+  .act-chips button.on{background:var(--purple); border-color:var(--purple); color:#fff}
+  .act-date{font-size:11px; font-weight:700; letter-spacing:.09em; color:var(--muted); text-transform:uppercase; padding:14px 2px 6px}
+  .act-date:first-child{padding-top:2px}
+  .actrow .pill-mini{display:inline-block; font-size:10px; font-weight:700; letter-spacing:.06em; padding:2px 8px; border-radius:99px; background:var(--purple-soft); color:var(--accent-ink); vertical-align:1px; margin-left:7px}
+  .actrow.warn .pill-mini{background:#FDF0D5; color:#8A6D1F}
+  .actrow.bad .pill-mini{background:#FDECEC; color:#8C1D18}
+  body.dark .actrow.warn .pill-mini{background:#3A2A10; color:#F3C969}
+  body.dark .actrow.bad .pill-mini{background:#3A1420; color:#F3A9A0}
+  .act-detail{margin-top:7px; background:var(--soft); border:1px solid var(--line); border-radius:11px; padding:9px 12px; font-size:12.5px; line-height:1.75}
+  .act-detail b{color:var(--ink)}
+  .act-detail .k{color:var(--muted); font-weight:600; display:inline-block; min-width:74px}
+  .actrow.intruder-card{border:1px solid var(--line); border-radius:15px; padding:13px 14px; margin-bottom:10px; background:var(--card)}
+  .actrow.intruder-card img{width:110px; height:82px}
+  .act-count{font-size:12.5px; color:var(--muted); font-weight:600}
+
+  /* ---------- dark theme ---------- */
+  body.dark{
+    --paper:#0A0D1C; --card:#121830; --ink:#EDF0FA; --muted:#9AA3C0; --line:#242C4E;
+    --green-soft:#12301C; --red-soft:#3A1712;
+    --shadow:0 12px 32px rgba(0,0,0,.45), 0 2px 6px rgba(0,0,0,.4);
+    --shadow-lg:0 24px 60px rgba(0,0,0,.6), 0 4px 14px rgba(0,0,0,.45);
+  }
+  body.dark::before{
+    background:
+      radial-gradient(600px 400px at 88% -6%, rgba(var(--accent-rgb),.26), transparent 65%),
+      radial-gradient(520px 380px at -8% 108%, rgba(var(--accent-rgb),.13), transparent 65%),
+      radial-gradient(1.6px 1.6px at 18% 26%, rgba(255,255,255,.55), transparent 60%),
+      radial-gradient(1.3px 1.3px at 74% 18%, rgba(255,255,255,.4), transparent 60%),
+      radial-gradient(1.8px 1.8px at 86% 64%, rgba(255,255,255,.35), transparent 60%),
+      radial-gradient(1.2px 1.2px at 34% 78%, rgba(255,255,255,.4), transparent 60%),
+      radial-gradient(1.5px 1.5px at 55% 40%, rgba(255,255,255,.3), transparent 60%);
+  }
+  body.dark .pad{background:#0C1128; border-color:var(--line)}
+  body.dark .dot::before{background:#3A4470}
+  body.dark .dot.on::before{background:linear-gradient(135deg,var(--pad-c1),var(--pad-c2))}
+  body.dark .field input{background:#0C1128; color:var(--ink)}
+  body.dark .field input:focus{background:#0F1430}
+  body.dark .field select{background-color:#0C1128; color:var(--ink)}
+  body.dark .btn{background:#171E3C; color:var(--ink)}
+  body.dark .btn.primary{background:linear-gradient(135deg,var(--purple),var(--purple2)); color:var(--on-accent)}
+  body.dark .fbtn{background:#171E3C; color:var(--ink)}
+  body.dark .fbtn.primary{background:linear-gradient(135deg,var(--purple),var(--purple2)); color:var(--on-accent)}
+  body.dark .fbtn.ghost{background:transparent}
+  body.dark .sidebar{background:rgba(10,13,28,.66)}
+  body.dark .navitem:hover{background:#171E3C}
+  body.dark .navitem.active{background:var(--purple-soft)}
+  body.dark .empty{background:rgba(255,255,255,.03)}
+  body.dark .winbtn{background:rgba(18,24,48,.85)}
+  body.dark .winbtn svg *{stroke:#C6CCE4}
+  body.dark .winbtn.close:hover svg *{stroke:#fff}
+  body.dark .switch .tr{background:#2A3260}
+  body.dark .setrow{border-color:#1D2444}
+  body.dark .seg button.on{background:#242C55; color:#fff}
+  body.dark #toast{background:#E9ECFA; color:#171B30}
+  body.dark #toast.error{background:#F3C6C2; color:#5C1712}
+  body.dark .errtext{border-color:#5C2B26}
+  body.dark ::-webkit-scrollbar-thumb{background:#2C3560; border-color:var(--paper)}
+</style>
+</head>
+<body>
+
+<div class="dragzone" data-drag></div>
+<div class="winbtns">
+  <button class="winbtn" id="btn-min" title="Minimize"><svg viewBox="0 0 24 24"><path d="M5 12h14"/></svg></button>
+  <button class="winbtn close" id="btn-close" title="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+</div>
+
+<!-- ============ SETUP ============ -->
+<section class="screen" id="screen-setup">
+  <div class="authwrap">
+    <div class="authcard" id="setup-card" style="max-width:480px">
+      <div>
+        <div class="wordmark auth"></div>
+        <div class="brandsub" style="margin-top:7px">by Hamii Scripts</div>
+      </div>
+      <h1 class="display">Protect your folders, <em>beautifully.</em></h1>
+      <p class="lead">Set a lock for this PC — the same lock opens the Admin Panel and every protected folder.</p>
+      <div class="seg" id="setup-tabs" style="max-width:280px; margin:12px auto 0">
+        <button data-tab="pattern" class="on">Pattern</button>
+        <button data-tab="passcode">Passcode</button>
+      </div>
+      <div id="setup-pattern-block" style="margin-top:14px">
+        <div class="pad" id="pad-setup"></div>
+        <div class="captured" id="setup-captured">
+          <span>Pattern captured.</span><button id="setup-redraw">Redraw</button>
+        </div>
+        <p class="hint" style="text-align:center">At least 4 dots. Quick to draw, hard to guess.</p>
+      </div>
+      <div id="setup-pass-block" style="display:none">
+        <p class="hint" id="setup-pin-step" style="text-align:center; margin-top:12px">Choose a passcode — at least 4 digits, like a phone PIN.</p>
+        <div id="pin-setup" style="margin-top:6px"></div>
+        <button class="kbdlink" id="btn-setup-pin-next" style="display:none">Continue</button>
+        <button class="kbdlink" id="btn-setup-pin-reset" style="display:none">Start over</button>
+      </div>
+      <div class="errtext" id="setup-error"></div>
+      <button class="btn primary block" id="btn-setup-create" disabled style="margin-top:8px">Create Lock &amp; Open Panel</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ LOGIN ============ -->
+<section class="screen" id="screen-login">
+  <div class="authwrap">
+    <div class="authcard" id="login-card">
+      <div>
+        <div class="wordmark auth"></div>
+        <div class="brandsub" style="margin-top:7px">Admin Panel</div>
+      </div>
+      <h1 class="display">Welcome <em>back.</em></h1>
+      <p class="lead" id="login-lead">Draw your pattern to open the panel.</p>
+      <div class="seg" id="login-tabs" style="max-width:280px; margin:18px auto 0">
+        <button data-tab="pattern" class="on">Pattern</button>
+        <button data-tab="passcode">Passcode</button>
+      </div>
+      <div id="login-pattern-block" style="margin-top:20px">
+        <div class="pad" id="pad-login"></div>
+      </div>
+      <div id="login-pass-block" style="display:none">
+        <div id="pin-login" style="margin-top:14px"></div>
+        <button class="btn primary block" id="btn-login-pass" style="margin-top:14px">Unlock Panel</button>
+        <button class="kbdlink" id="link-login-kbd">Type with keyboard instead</button>
+        <div class="field" id="login-kbd-block" style="display:none; margin-top:12px">
+          <input type="password" id="login-pass" placeholder="Enter your passcode" autocomplete="off">
+        </div>
+      </div>
+      <div class="errtext" id="login-error"></div>
+      <div class="freeze" id="login-freeze"></div>
+      <button class="kbdlink" id="login-forgot" style="display:none">Forgot your lock?</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ UNLOCK ============ -->
+<section class="screen" id="screen-unlock">
+  <div class="unlockwrap" id="unlock-card">
+    <div class="unlock-brand">
+      <div>
+        <div class="wordmark auth"></div>
+        <div class="brandsub" style="margin-top:6px">Secure folder access</div>
+      </div>
+    </div>
+    <div class="foldercard unlock-folder">
+      <div class="ftile" id="unlock-tile">
+        <svg viewBox="0 0 24 24"><path d="M3 7.2A2.2 2.2 0 0 1 5.2 5h3.6l2.2 2.6h7.8A2.2 2.2 0 0 1 21 9.8V17a2.2 2.2 0 0 1-2.2 2.2H5.2A2.2 2.2 0 0 1 3 17z"/></svg>
+      </div>
+      <div class="finfo">
+        <div class="fname" id="unlock-name">Folder</div>
+        <div class="fpath" id="unlock-path"></div>
+        <div class="fnote" id="unlock-note" style="display:none"></div>
+      </div>
+      <span class="pill locked">LOCKED</span>
+    </div>
+    <div class="card unlock-auth">
+      <h3>Unlock this folder</h3>
+      <p class="sub">Draw your pattern or enter your passcode.<b id="unlock-own-hint"></b></p>
+      <div class="seg" id="unlock-tabs">
+        <button data-tab="pattern" class="on">Pattern</button>
+        <button data-tab="passcode">Passcode</button>
+      </div>
+      <div id="unlock-pattern-block">
+        <div class="pad" id="pad-unlock"></div>
+      </div>
+      <div id="unlock-pass-block" style="display:none">
+        <div id="pin-unlock" style="margin-top:10px"></div>
+        <button class="btn primary block" id="btn-unlock-pass" style="margin-top:14px">Unlock Folder</button>
+        <button class="kbdlink" id="link-unlock-kbd">Type with keyboard instead</button>
+        <div class="field" id="unlock-kbd-block" style="display:none; margin-top:12px">
+          <input type="password" id="unlock-pass" placeholder="Enter your passcode" autocomplete="off">
+        </div>
+      </div>
+      <div class="errtext" id="unlock-error"></div>
+      <div class="freeze" id="unlock-freeze"></div>
+      <button class="kbdlink" id="unlock-forgot" style="display:none">Forgot your lock?</button>
+    </div>
+    <p class="unlock-note">This folder locks itself again when its window closes.<br><b>DARKBOX · BY HAMII</b></p>
+  </div>
+</section>
+
+<!-- ============ RECOVERY ============ -->
+<section class="screen" id="screen-recovery">
+  <div class="authwrap">
+    <div class="authcard" id="recovery-card" style="max-width:480px; text-align:center">
+      <div>
+        <div class="wordmark auth"></div>
+        <div class="brandsub" style="margin-top:7px">Account recovery</div>
+      </div>
+      <div id="recover-step1">
+        <h1 class="display" style="font-size:29px; margin:16px 0 6px">Forgot your <em>lock?</em></h1>
+        <p class="lead" style="font-size:13.5px">Prove it is really you, then set a new lock. Your folders and their encryption stay untouched.</p>
+        <div class="seg" id="recover-tabs" style="max-width:280px; margin:14px auto 0">
+          <button data-tab="code" class="on">Recovery Code</button>
+          <button data-tab="question">Question</button>
+        </div>
+        <div id="recover-code-block" style="margin-top:18px">
+          <div class="field"><input type="text" id="recover-code" placeholder="XXXX-XXXX-XXXX-XXXX" autocomplete="off" style="text-align:center; text-transform:uppercase"></div>
+        </div>
+        <div id="recover-q-block" style="display:none; margin-top:18px">
+          <p class="sub" id="recover-question-text" style="font-weight:600; color:var(--ink)"></p>
+          <div class="field"><input type="text" id="recover-answer" placeholder="Your answer" autocomplete="off"></div>
+        </div>
+        <div class="errtext" id="recover-error"></div>
+        <button class="btn primary block" id="btn-recover-verify" style="margin-top:12px">Verify</button>
+        <button class="kbdlink" id="recover-back">Back to sign in</button>
+      </div>
+      <div id="recover-step2" style="display:none">
+        <h1 class="display" style="font-size:29px; margin:16px 0 6px">Set a new <em>lock.</em></h1>
+        <p class="lead" style="font-size:13.5px">This replaces your old pattern and passcode.</p>
+        <div class="seg" id="reset-tabs" style="max-width:280px; margin:14px auto 0">
+          <button data-tab="pattern" class="on">Pattern</button>
+          <button data-tab="passcode">Passcode</button>
+        </div>
+        <div id="reset-pattern-block" style="margin-top:16px">
+          <div class="pad" id="pad-recover"></div>
+          <div class="captured" id="recover-captured">
+            <span>Pattern captured.</span><button id="recover-redraw">Redraw</button>
+          </div>
+        </div>
+        <div id="reset-pass-block" style="display:none">
+          <p class="hint" id="recover-pin-step" style="text-align:center; margin-top:14px">Choose a new passcode — at least 4 digits.</p>
+          <div id="pin-recover" style="margin-top:8px"></div>
+          <button class="kbdlink" id="btn-recover-pin-next" style="display:none">Continue</button>
+          <button class="kbdlink" id="btn-recover-pin-reset" style="display:none">Start over</button>
+        </div>
+        <div class="errtext" id="reset-error"></div>
+        <button class="btn primary block" id="btn-recover-reset" disabled style="margin-top:12px">Reset Lock</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ INSTALLER WIZARD ============ -->
+<section class="screen" id="screen-installer">
+  <div class="authwrap">
+    <div class="authcard" style="max-width:560px; text-align:center">
+      <div>
+        <div class="wordmark auth"></div>
+        <div class="brandsub" style="margin-top:7px">by Hamii Scripts</div>
+      </div>
+      <h1 class="display" id="inst-title">Welcome to <em>DarkBox.</em></h1>
+      <p class="lead" id="inst-lead">DarkBox protects your folders with a pattern or passcode — they lock themselves again the moment you close them.</p>
+      <div id="inst-fresh">
+        <div style="max-width:430px; margin:16px auto 2px">
+          <div class="feat">
+            <div class="fic"><svg viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="9.5" rx="2.2"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/></svg></div>
+            <div><b>Pattern or passcode lock</b><span>Set your lock in the next step — a quick pattern, an iPhone-style PIN, or both.</span></div>
+          </div>
+          <div class="feat">
+            <div class="fic"><svg viewBox="0 0 24 24"><path d="M4 8.5A1.5 1.5 0 0 1 5.5 7h13A1.5 1.5 0 0 1 20 8.5v8A1.5 1.5 0 0 1 18.5 18h-13A1.5 1.5 0 0 1 4 16.5z"/><circle cx="12" cy="12.5" r="3.2"/></svg></div>
+            <div><b>Intruder photo &amp; activity log</b><span>Wrong tries are photographed and recorded, with device and WiFi details.</span></div>
+          </div>
+          <div class="feat">
+            <div class="fic"><svg viewBox="0 0 24 24"><path d="M3.5 12S6 5.8 12 5.8 20.5 12 20.5 12 18 18.2 12 18.2 3.5 12 3.5 12Z"/><path d="M4.5 4.5l15 15"/></svg></div>
+            <div><b>Fake decoy mode</b><span>A second, fake lock that shows harmless decoy folders to anyone snooping.</span></div>
+          </div>
+        </div>
+        <button class="btn primary block" id="btn-inst-install" style="margin-top:20px">Install DarkBox</button>
+        <p class="hint" id="inst-ver" style="margin-top:12px"></p>
+      </div>
+      <div id="inst-update" style="display:none">
+        <p class="lead" id="inst-cur" style="font-weight:650; color:var(--ink)"></p>
+        <button class="btn primary block" id="btn-inst-update" style="margin-top:18px">Update</button>
+        <div style="display:flex; gap:10px; margin-top:10px">
+          <button class="btn" id="btn-inst-reinstall" style="flex:1">Reinstall</button>
+          <button class="btn" id="btn-inst-open" style="flex:1">Open DarkBox</button>
+        </div>
+        <p class="hint" style="margin-top:14px">Your pattern, folders and settings are always kept — updating only replaces the program files.</p>
+      </div>
+      <div id="inst-done" style="display:none">
+        <div class="doneick"><svg viewBox="0 0 24 24"><path d="M4.5 12.5l5 5L19.5 7"/></svg></div>
+        <button class="btn primary block" id="btn-inst-finish" style="margin-top:22px">Set Up Your Lock</button>
+        <p class="hint" style="margin-top:12px">DarkBox is now in your Start Menu and on your Desktop — no need to run setup again.</p>
+      </div>
+      <div class="errtext" id="inst-error"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ ADMIN ============ -->
+<section class="screen" id="screen-admin">
+  <aside class="sidebar">
+    <div data-drag style="padding:4px 2px 0">
+      <div class="wordmark side"></div>
+    </div>
+    <div style="margin-top:34px">
+      <div class="navitem active" data-nav="page-folders">
+        <svg viewBox="0 0 24 24"><path d="M3 7.2A2.2 2.2 0 0 1 5.2 5h3.6l2.2 2.6h7.8A2.2 2.2 0 0 1 21 9.8V17a2.2 2.2 0 0 1-2.2 2.2H5.2A2.2 2.2 0 0 1 3 17z"/></svg>
+        Folders
+      </div>
+      <div class="navitem" data-nav="page-activity">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.6"/><path d="M12 7.6V12l3 2"/></svg>
+        Activity
+      </div>
+      <div class="navitem" data-nav="page-security">
+        <svg viewBox="0 0 24 24"><path d="M12 3l7 2.6V11c0 4.6-3 8.4-7 9.9C8 19.4 5 15.6 5 11V5.6z"/><path d="M9.2 11.6l2 2 3.8-4"/></svg>
+        Security
+      </div>
+      <div class="navitem" data-nav="page-settings">
+        <svg viewBox="0 0 24 24"><path d="M4 8.2h9.5M19 8.2H20M4 15.8h3.5M13 15.8h7"/><circle cx="16.5" cy="8.2" r="2.3"/><circle cx="10" cy="15.8" r="2.3"/></svg>
+        Settings
+      </div>
+      <div class="navitem" data-nav="page-appearance">
+        <svg viewBox="0 0 24 24"><path d="M12 3.6s6.2 6.8 6.2 11.1a6.2 6.2 0 0 1-12.4 0C5.8 10.4 12 3.6 12 3.6z"/></svg>
+        Appearance
+      </div>
+      <div class="navitem" data-nav="page-developer">
+        <svg viewBox="0 0 24 24"><path d="M8.5 8 4.5 12l4 4M15.5 8l4 4-4 4"/></svg>
+        Developer
+      </div>
+    </div>
+    <div class="sidefoot">
+      <div class="sidecard">
+        <div class="t">Hamii Scripts</div>
+        <div class="s">Premium tools for developers and creators — built with care, free of clutter.</div>
+      </div>
+      <div style="font-size:11.5px; color:var(--muted); margin-top:13px; text-align:center">Version 4.0.5 · Web UI Edition</div>
+      <div style="font-size:11px; color:var(--muted); margin-top:3px; text-align:center">© 2026 Hamii Scripts</div>
+    </div>
+  </aside>
+
+  <div class="main" id="admin-main">
+    <div class="page active" id="page-folders">
+    <div class="mainhead">
+      <div>
+        <h1>Your <em>folders</em></h1>
+        <p>Locked folders rest in a hidden vault — only a small shortcut stays behind. New folders you add are locked right away.</p>
+      </div>
+      <button class="btn primary" id="btn-add" style="padding:13px 24px">
+        <svg width="15" height="15" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round"/></svg>
+        Add Folder
+      </button>
+    </div>
+
+    <div class="stats">
+      <div class="stat">
+        <div class="ico"><svg viewBox="0 0 24 24"><path d="M3 7.2A2.2 2.2 0 0 1 5.2 5h3.6l2.2 2.6h7.8A2.2 2.2 0 0 1 21 9.8V17a2.2 2.2 0 0 1-2.2 2.2H5.2A2.2 2.2 0 0 1 3 17z"/></svg></div>
+        <div><div class="num" id="stat-total">0</div><div class="lbl">TOTAL FOLDERS</div></div>
+      </div>
+      <div class="stat">
+        <div class="ico"><svg viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="9.5" rx="2.2"/><path d="M8 10.5V7.8a4 4 0 0 1 8 0v2.7"/></svg></div>
+        <div><div class="num" id="stat-locked">0</div><div class="lbl">LOCKED</div></div>
+      </div>
+      <div class="stat green">
+        <div class="ico"><svg viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="9.5" rx="2.2"/><path d="M8 10.5V7.8a4 4 0 0 1 7.8-1.2"/></svg></div>
+        <div><div class="num" id="stat-open">0</div><div class="lbl">OPEN NOW</div></div>
+      </div>
+      <div class="stat">
+        <div class="ico"><svg viewBox="0 0 24 24"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></svg></div>
+        <div><div class="num" id="stat-size">···</div><div class="lbl">PROTECTED DATA</div></div>
+      </div>
+    </div>
+
+    <div class="foldersbar">
+      <div class="searchwrap">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20.5 20.5L16.6 16.6"/></svg>
+        <input type="text" id="folder-search" placeholder="Search folders by name, path or note…">
+      </div>
+      <div class="seg" id="seg-sort">
+        <button data-sort="name" class="on">Name</button>
+        <button data-sort="recent">Recent</button>
+        <button data-sort="size">Size</button>
+      </div>
+    </div>
+    <div id="folder-list"></div>
+    </div><!-- /page-folders -->
+
+    <div class="page" id="page-activity">
+      <div class="mainhead">
+        <div>
+          <h1>Activity</h1>
+          <p>Everything DarkBox has done — locks, unlocks, wrong tries and intruder photos.</p>
+        </div>
+        <button class="btn" id="btn-clear-activity">Clear History</button>
+      </div>
+      <div class="act-tools">
+        <div class="act-search">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20.5 20.5L16.6 16.6"/></svg>
+          <input type="text" id="activity-search" placeholder="Search activity… (folder, PC, WiFi, city)">
+        </div>
+        <div class="act-chips" id="act-chips">
+          <button data-act-filter="all" class="on">All</button>
+          <button data-act-filter="locks">Locks</button>
+          <button data-act-filter="wrong">Wrong tries</button>
+          <button data-act-filter="intruder">Intruder</button>
+          <button data-act-filter="system">System</button>
+        </div>
+        <span class="act-count" id="activity-count"></span>
+      </div>
+      <div class="card">
+        <div id="activity-list"></div>
+      </div>
+    </div><!-- /page-activity -->
+
+    <div class="page" id="page-security">
+      <div class="mainhead">
+        <div>
+          <h1>Security</h1>
+          <p>Change the pattern or passcode that opens this panel and your folders.</p>
+        </div>
+      </div>
+      <div class="card">
+      <div class="btnrow">
+        <button class="btn" id="btn-change-pattern">Change Pattern</button>
+        <button class="btn" id="btn-change-passcode">Change Passcode</button>
+        <button class="btn" id="btn-lockall">Lock All Folders</button>
+      </div>
+      <p class="sub" style="margin:16px 0 0">Lock All Folders locks every open folder immediately, wherever it is. Tip: Ctrl + Shift + L does the same from anywhere in Windows.</p>
+      </div>
+      <div class="card">
+        <h2>Fake mode (decoy)</h2>
+        <p class="sub">Set a separate decoy pattern or passcode — different from your real one. Whoever enters it sees a harmless fake panel with fake folders, and a folder unlock opens an empty decoy folder instead. Your real folders stay hidden, and every decoy use is recorded in Activity.</p>
+        <p class="sub" id="decoy-status" style="font-weight:600; color:var(--ink)"></p>
+        <div class="btnrow">
+          <button class="btn" id="btn-decoy-pattern">Set Decoy Pattern</button>
+          <button class="btn" id="btn-decoy-passcode">Set Decoy Passcode</button>
+          <button class="btn" id="btn-decoy-clear">Turn Off Fake Mode</button>
+        </div>
+      </div>
+      <div class="card">
+      <div class="setrow">
+        <div>
+          <div class="t">New folders use High End Lock (AES-256) by default</div>
+          <div class="d">Just Lock is the default — fast, the folder is moved to the vault and hidden. Turn this on if new folders should use High End Lock instead, with AES-256 encryption. High End is much slower on big folders and low-end PCs. You can change the mode for any folder from its lock icon.</div>
+        </div>
+        <label class="switch"><input type="checkbox" id="sw-encrypt"><span class="tr"></span></label>
+      </div>
+      </div>
+      <div class="card">
+        <h2>Recovery</h2>
+        <p class="sub">If you ever forget your pattern and passcode, a recovery option is the only way back in — without it, locked folders cannot be opened. Set at least one.</p>
+        <p class="sub" id="recovery-status" style="font-weight:600; color:var(--ink)"></p>
+        <div class="btnrow">
+          <button class="btn" id="btn-recovery-code">Recovery Code</button>
+          <button class="btn" id="btn-recovery-question">Security Question</button>
+        </div>
+      </div>
+      <div class="card">
+      <div class="setrow">
+        <div>
+          <div class="t">Intruder photo</div>
+          <div class="d">On the 3rd wrong try the webcam quietly takes a photo — it appears in Activity. After 5 wrong tries, input freezes for 30 seconds.</div>
+        </div>
+        <label class="switch"><input type="checkbox" id="sw-intruder"><span class="tr"></span></label>
+      </div>
+      </div>
+    </div><!-- /page-security -->
+
+    <div class="page" id="page-settings">
+      <div class="mainhead">
+        <div>
+          <h1>Settings</h1>
+          <p>How the locker behaves in the background.</p>
+        </div>
+      </div>
+      <div class="card">
+      <div class="setrow">
+        <div>
+          <div class="t">Run in the background at startup</div>
+          <div class="d">A small tray agent starts with Windows and watches your folders.</div>
+        </div>
+        <label class="switch"><input type="checkbox" id="sw-startup"><span class="tr"></span></label>
+      </div>
+      <div class="setrow">
+        <div>
+          <div class="t">Re-lock open folders at startup</div>
+          <div class="d">Any folder left open is locked again when the agent starts.</div>
+        </div>
+        <label class="switch"><input type="checkbox" id="sw-relock"><span class="tr"></span></label>
+      </div>
+      <div class="setrow">
+        <div>
+          <div class="t">Auto-lock when a folder window closes</div>
+          <div class="d">The moment you close an unlocked folder's window, it locks itself.</div>
+        </div>
+        <label class="switch"><input type="checkbox" id="sw-autolock"><span class="tr"></span></label>
+      </div>
+      <div class="setrow">
+        <div>
+          <div class="t">Lock everything when the PC locks</div>
+          <div class="d">Locking Windows — or putting it to sleep — locks every open folder at once.</div>
+        </div>
+        <label class="switch"><input type="checkbox" id="sw-pclock"><span class="tr"></span></label>
+      </div>
+      <div class="setrow">
+        <div>
+          <div class="t">Auto-lock open folders after</div>
+          <div class="d">A folder left open locks itself when the time runs out — even if its window is still open.</div>
+        </div>
+        <div class="seg" id="seg-automins">
+          <button data-mins="0">Off</button>
+          <button data-mins="5">5 min</button>
+          <button data-mins="10">10 min</button>
+          <button data-mins="30">30 min</button>
+        </div>
+      </div>
+      <div class="setrow">
+        <div>
+          <div class="t">Sound effects</div>
+          <div class="d">Soft clicks when folders lock and unlock.</div>
+        </div>
+        <label class="switch"><input type="checkbox" id="sw-sounds"><span class="tr"></span></label>
+      </div>
+      <div class="setrow">
+        <div>
+          <div class="t">Quick-lock hotkey</div>
+          <div class="d">Press it anywhere in Windows to lock every open folder instantly.</div>
+        </div>
+        <span class="owntag" style="margin:0">CTRL + SHIFT + L</span>
+      </div>
+      <div class="setrow">
+        <div>
+          <div class="t">"Lock with DarkBox" in Explorer</div>
+          <div class="d">Right-click any folder in Windows Explorer to lock it with DarkBox.</div>
+        </div>
+        <label class="switch"><input type="checkbox" id="sw-contextmenu"><span class="tr"></span></label>
+      </div>
+      <div class="setrow">
+        <div>
+          <div class="t">Lite mode (smooth on slow PCs)</div>
+          <div class="d">Turns off blur effects, heavy shadows and animations so DarkBox stays fast on weak computers. It turns itself on automatically on small PCs — change it here any time.</div>
+        </div>
+        <label class="switch"><input type="checkbox" id="sw-lite"><span class="tr"></span></label>
+      </div>
+      </div>
+      <div class="card">
+        <h2>Backup &amp; restore</h2>
+        <p class="sub">Save an encrypted backup of your lock settings, folder list and activity — protected by a backup password. Keep it somewhere safe; it is the other way back if this PC's settings are ever lost.</p>
+        <div class="btnrow">
+          <button class="btn" id="btn-backup-export">Export Encrypted Backup</button>
+          <button class="btn" id="btn-backup-restore">Restore from Backup</button>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Updates</h2>
+        <p class="sub" id="update-status">You are running DarkBox <span id="update-current">—</span>.</p>
+        <div class="btnrow">
+          <button class="btn" id="btn-check-update">Check for Updates</button>
+          <button class="btn primary" id="btn-get-update" style="display:none">Download Update</button>
+        </div>
+      </div>
+    </div><!-- /page-settings -->
+
+    <div class="page" id="page-appearance">
+      <div class="mainhead">
+        <div>
+          <h1>Appearance</h1>
+          <p>Make the locker yours. Everything updates instantly — buttons, pattern pad, highlights — and your choice is remembered.</p>
+        </div>
+      </div>
+      <div class="card">
+      <div class="setrow">
+        <div>
+          <div class="t">Mode</div>
+          <div class="d">The bright website look, or a deep dark theme.</div>
+        </div>
+        <div class="seg" id="seg-mode">
+          <button data-mode="light">Light</button>
+          <button data-mode="dark">Dark</button>
+        </div>
+      </div>
+      <div class="setrow">
+        <div>
+          <div class="t">Accent color</div>
+          <div class="d">Pick a ready-made color…</div>
+        </div>
+        <div class="swatches" id="swatches"></div>
+      </div>
+      <div class="setrow">
+        <div>
+          <div class="t">Gradient themes</div>
+          <div class="d">…a two-color gradient…</div>
+        </div>
+        <div class="grads" id="grads"></div>
+      </div>
+      <div class="setrow">
+        <div>
+          <div class="t">Custom colors</div>
+          <div class="d">…or your own pair: start and end of the gradient.</div>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:9px; align-items:flex-end">
+          <label class="colorpick">
+            <input type="color" id="custom-color" value="#6d28d9">
+            <span id="custom-hex">#6D28D9</span>
+          </label>
+          <label class="colorpick">
+            <input type="color" id="custom-color2" value="#7c3aed">
+            <span id="custom-hex2">#7C3AED</span>
+          </label>
+        </div>
+      </div>
+      </div>
+    </div><!-- /page-appearance -->
+
+    <div class="page" id="page-developer">
+      <div class="mainhead">
+        <div>
+          <h1>Developer</h1>
+          <p>The person behind Hamii Scripts — and this app.</p>
+        </div>
+      </div>
+      <div class="card">
+        <div class="devhead">
+          <div class="devava"><img src="avatar.jpg" alt="Hamid Ali"></div>
+          <div>
+            <div class="devname">Hamid Ali</div>
+            <div class="devrole">Full-Stack Web Developer · Founder — Hamii Scripts</div>
+            <p class="devbio">Programmer, graphic designer and video editor from Kamalia, Pakistan. I build premium tools for developers and creators under the Hamii Scripts banner, and teach coding on the HamiiDev YouTube channel.</p>
+          </div>
+        </div>
+        <div class="devgrid">
+          <div class="devrow"><span class="k">Website</span><a data-open="https://hamiiscripts.com">hamiiscripts.com</a></div>
+          <div class="devrow"><span class="k">WhatsApp</span><a data-open="https://wa.me/923706087592">0370 6087592</a></div>
+          <div class="devrow"><span class="k">Email</span><a data-open="mailto:hamidali@hamiiscripts.com">hamidali@hamiiscripts.com</a></div>
+          <div class="devrow"><span class="k">YouTube</span><a data-open="https://www.youtube.com/@HamiiDevPK">HamiiDev</a></div>
+          <div class="devrow"><span class="k">GitHub</span><a data-open="https://github.com/madnikhan627">madnikhan627</a></div>
+          <div class="devrow"><span class="k">LinkedIn</span><a data-open="https://www.linkedin.com/in/madni">linkedin.com/in/madni</a></div>
+          <div class="devrow"><span class="k">Fiverr</span><a data-open="https://www.fiverr.com/hamidalimadni">@hamidalimadni</a></div>
+          <div class="devrow"><span class="k">Location</span><span>Kamalia, Punjab, Pakistan</span></div>
+        </div>
+        <div class="btnrow" style="margin-top:20px">
+          <button class="btn primary" data-open="https://hamiiscripts.com">Visit Website</button>
+          <button class="btn" data-open="https://wa.me/923706087592">Chat on WhatsApp</button>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Copyright</h2>
+        <p class="sub" style="margin-bottom:0">© <span id="copy-year">2026</span> Hamii Scripts · Hamid Ali. All rights reserved.<br>
+        DarkBox — Version 4.0.5 · Web UI Edition, by Hamii Scripts. This software and its design are the property of Hamii Scripts. Copying, redistribution, resale or reverse engineering, in whole or in part, is not allowed without written permission from the developer.</p>
+      </div>
+    </div><!-- /page-developer -->
+  </div>
+</section>
+
+<!-- ============ MODALS ============ -->
+<div class="overlay" id="modal-remove">
+  <div class="modal">
+    <h2>Remove this folder?</h2>
+    <p id="remove-text">The folder will be removed from the locker.</p>
+    <div class="btnrow" style="justify-content:flex-end">
+      <button class="btn" data-close>Cancel</button>
+      <button class="btn primary" id="btn-remove-confirm" style="background:linear-gradient(135deg,#B3261E,#D33A31); box-shadow:0 10px 24px rgba(179,38,30,.3)">Remove</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="modal-pattern">
+  <div class="modal">
+    <h2 id="mpat-title">Change pattern</h2>
+    <p id="mpat-sub">Draw the new pattern — at least 4 dots.</p>
+    <div class="pad" id="pad-modal" style="margin-top:18px"></div>
+    <div class="btnrow" style="justify-content:flex-end">
+      <button class="btn" data-close>Cancel</button>
+      <button class="btn primary" id="btn-pattern-save" disabled>Save Pattern</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="modal-passcode">
+  <div class="modal">
+    <h2 id="mpass-title">Change passcode</h2>
+    <p id="mpass-sub">Set a new passcode of at least 4 digits.</p>
+    <div id="pin-modal" style="margin-top:14px"></div>
+    <div class="btnrow" style="justify-content:flex-end">
+      <button class="btn" data-close>Cancel</button>
+      <button class="btn primary" id="btn-pass-save" disabled>Continue</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="modal-folderkey">
+  <div class="modal">
+    <h2 id="fkey-title">Folder key</h2>
+    <p id="fkey-text">Give this folder its own pattern or passcode — extra protection on top of the panel lock. The panel pattern / passcode always works as a master key.</p>
+    <div style="display:flex; flex-direction:column; gap:10px; margin-top:18px">
+      <button class="btn" id="btn-fkey-pattern">Set Own Pattern</button>
+      <button class="btn" id="btn-fkey-passcode">Set Own Passcode</button>
+      <button class="btn" id="btn-fkey-clear">Use the Panel Pattern / Passcode</button>
+      <button class="btn" data-close>Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="modal-folderauth">
+  <div class="modal">
+    <h2 id="fauth-title">Enter the folder key</h2>
+    <p id="fauth-text">This folder has its own key.</p>
+    <div id="fauth-pad-block">
+      <div class="pad" id="pad-fauth" style="margin-top:16px"></div>
+    </div>
+    <p class="hint" style="text-align:center; margin-top:18px">— or the folder's passcode —</p>
+    <div id="pin-fauth"></div>
+    <button class="kbdlink" id="link-fauth-kbd">Type with keyboard instead</button>
+    <div class="field" id="fauth-kbd-block" style="display:none; margin-top:12px">
+      <input type="password" id="fauth-pass" placeholder="Enter the key" autocomplete="off">
+    </div>
+    <div class="errtext" id="fauth-error"></div>
+    <div class="btnrow" style="justify-content:flex-end">
+      <button class="btn" data-close>Cancel</button>
+      <button class="btn primary" id="btn-fauth-unlock">Unlock Folder</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="modal-note">
+  <div class="modal">
+    <h2>Folder note</h2>
+    <p>A small label under the folder's name — only you see it, inside DarkBox.</p>
+    <div class="field" style="margin-top:14px">
+      <label>NOTE</label>
+      <input type="text" id="note-input" placeholder="e.g. Work files — do not share" maxlength="80" autocomplete="off">
+    </div>
+    <div class="btnrow" style="justify-content:flex-end">
+      <button class="btn" data-close>Cancel</button>
+      <button class="btn primary" id="btn-note-save">Save Note</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="modal-lockmode">
+  <div class="modal">
+    <h2 id="lockmode-title">Lock mode</h2>
+    <p>How should this folder lock? Just Lock is fast — the folder is moved to the vault and hidden, and it cannot be opened without DarkBox. High End Lock also AES-256 encrypts every file, so even if someone finds the vault the files are unreadable — but it takes much longer on big folders and low-end PCs.</p>
+    <div class="field" style="margin-top:14px">
+      <button class="btn modeopt" id="btn-mode-just" style="width:100%; text-align:left; margin-bottom:8px">
+        <b>Just Lock</b> — fast, no encryption. Locks instantly, opens instantly.
+      </button>
+      <button class="btn modeopt" id="btn-mode-high" style="width:100%; text-align:left">
+        <b>High End Lock</b> — vault + AES-256 encryption. Slow on big folders, strongest protection.
+      </button>
+    </div>
+    <div class="btnrow" style="justify-content:flex-end">
+      <button class="btn" data-close>Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="modal-browse">
+  <div class="modal">
+    <h2>Add a <em>folder</em></h2>
+    <p>Pick the folder to protect — it will be locked right away. Double-click a folder to open it.</p>
+    <div class="bbar">
+      <button class="bup" id="btn-browse-up" title="Up one level"><svg viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
+      <div class="crumbs" id="browse-crumbs"></div>
+    </div>
+    <div class="bwrap">
+      <div class="brail" id="browse-places"></div>
+      <div class="blist" id="browse-list"></div>
+    </div>
+    <div class="bnew" id="browse-newrow">
+      <input type="text" id="browse-newname" placeholder="New folder name" autocomplete="off" maxlength="60">
+      <button class="btn primary" id="btn-browse-create">Create</button>
+    </div>
+    <div class="bfoot">
+      <div class="bsel" id="browse-selected">No folder selected</div>
+      <button class="btn" id="btn-browse-new">New Folder</button>
+      <button class="btn" data-close>Cancel</button>
+      <button class="btn primary" id="btn-browse-add" disabled>Add &amp; Lock</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="modal-photo">
+  <div class="modal">
+    <h2>Intruder photo</h2>
+    <p id="photo-when">Captured on a wrong try.</p>
+    <img class="big" id="photo-big" src="" alt="Intruder photo" style="margin-top:14px">
+    <div class="btnrow" style="justify-content:flex-end; margin-top:18px">
+      <button class="btn" data-close>Close</button>
+      <button class="btn primary" id="btn-photo-save">Save to Downloads</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="modal-recovery">
+  <div class="modal">
+    <h2 id="recovery-modal-title">Recovery code</h2>
+    <div id="recovery-code-view">
+      <p>Write this code down and keep it somewhere safe — it is shown only once. With it, you can reset your lock if you ever forget it.</p>
+      <div class="reccode" id="recovery-code-text">····</div>
+      <div class="btnrow" style="justify-content:flex-end; margin-top:18px">
+        <button class="btn" id="btn-copy-code">Copy Code</button>
+        <button class="btn primary" data-close>I Have Saved It</button>
+      </div>
+    </div>
+    <div id="recovery-q-view" style="display:none">
+      <p>Pick a question only you know the answer to. Answers are not case-sensitive.</p>
+      <div class="field" style="margin-top:14px">
+        <select id="recovery-q-select">
+          <option>What was the name of your first school?</option>
+          <option>What city were you born in?</option>
+          <option>What is your mother's first name?</option>
+          <option>What was your first phone number?</option>
+          <option>What is the name of your best friend?</option>
+        </select>
+      </div>
+      <div class="field" style="margin-top:10px">
+        <input type="text" id="recovery-q-answer" placeholder="Your answer" autocomplete="off">
+      </div>
+      <div class="btnrow" style="justify-content:flex-end; margin-top:18px">
+        <button class="btn" data-close>Cancel</button>
+        <button class="btn primary" id="btn-recovery-q-save">Save Question</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="modal-backup">
+  <div class="modal">
+    <h2 id="backup-title">Backup password</h2>
+    <p id="backup-text">Choose a password for the encrypted backup file.</p>
+    <div class="field" style="margin-top:14px">
+      <input type="password" id="backup-pass" placeholder="Backup password" autocomplete="off">
+    </div>
+    <div class="btnrow" style="justify-content:flex-end; margin-top:18px">
+      <button class="btn" data-close>Cancel</button>
+      <button class="btn primary" id="btn-backup-go">Continue</button>
+    </div>
+  </div>
+</div>
+
+<div id="colorpop">
+  <div class="t">FOLDER COLOR</div>
+  <div class="grid" id="colorpop-grid"></div>
+</div>
+
+<div id="busy">
+  <svg class="spinner" viewBox="0 0 50 50">
+    <circle class="ring" cx="25" cy="25" r="20"></circle>
+    <circle class="arc" cx="25" cy="25" r="20"></circle>
+    <circle class="arc arc2" cx="25" cy="25" r="13.5"></circle>
+  </svg>
+  <div id="busy-text">Unlocking…</div>
+  <div id="busy-barwrap"><div id="busy-bar"></div></div>
+  <div id="busy-pct"></div>
+</div>
+
+<div id="toast"></div>
+
+<!-- v4.1.0: "Folder locked ✓" confirmation. A folder is only DONE when
+     this popup says so — never from a list tag alone. -->
+<div class="overlay" id="modal-locked">
+  <div class="modal" style="text-align:center; width:400px">
+    <div class="doneick"><svg viewBox="0 0 24 24"><path d="M4 12.5l5 5L20 6.5"/></svg></div>
+    <h2 style="margin-top:16px">Folder locked</h2>
+    <p id="locked-success-text" style="margin-top:6px"></p>
+    <p id="locked-success-sub" style="margin-top:4px; font-size:12.5px"></p>
+    <button class="btn primary block" id="btn-locked-ok" style="margin-top:20px">Done</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var post = function(obj){
+    if (window.chrome && window.chrome.webview)
+      window.chrome.webview.postMessage(JSON.stringify(obj));
+  };
+  var $ = function(id){ return document.getElementById(id); };
+  var esc = function(s){ return String(s||"").replace(/[&<>"']/g, function(c){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); };
+
+  /* ---------------- theme engine ---------------- */
+  var theme = { color: "#6D28D9", color2: "", dark: false };
+  function lum(hex){
+    var a = hexRgb(hex);
+    function f(v){ v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }
+    return 0.2126 * f(a[0]) + 0.7152 * f(a[1]) + 0.0722 * f(a[2]);
+  }
+  function readableInk(hex){
+    // Nudge the accent until it stays readable on the current background,
+    // so white or black accent picks can never make icons/text vanish.
+    var target = hex, t = 0;
+    if (theme.dark){ while (lum(target) < 0.30 && t < 1){ t += 0.15; target = mix(hex, "#FFFFFF", t); } }
+    else { while (lum(target) > 0.16 && t < 1){ t += 0.15; target = mix(hex, "#14101F", t); } }
+    return target;
+  }
+  function onAccent(hex){ return lum(hex) > 0.45 ? "#262038" : "#FFFFFF"; }
+  function padTone(hex){
+    // Pattern lines must stay visible on the pad's own background:
+    // too-light colors get deepened (light mode), near-black gets lifted (dark mode).
+    var L = lum(hex);
+    if (!theme.dark && L > 0.45) return mix(hex, readableInk(hex), 0.5);
+    if (theme.dark && L < 0.05) return mix(hex, "#FFFFFF", 0.35);
+    return hex;
+  }
+  function hexRgb(h){
+    h = h.replace("#", "");
+    if (h.length === 3) h = h.split("").map(function(c){ return c + c; }).join("");
+    var n = parseInt(h, 16);
+    return [n >> 16 & 255, n >> 8 & 255, n & 255];
+  }
+  function rgbHex(r, g, b){
+    function c(v){ v = Math.max(0, Math.min(255, Math.round(v))); return (v < 16 ? "0" : "") + v.toString(16); }
+    return "#" + c(r) + c(g) + c(b);
+  }
+  function shade(hex, amt){ var a = hexRgb(hex); return rgbHex(a[0] + amt, a[1] + amt, a[2] + amt); }
+  function mix(hex, hex2, t){
+    var a = hexRgb(hex), b = hexRgb(hex2);
+    return rgbHex(a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t);
+  }
+  function applyTheme(){
+    var c = theme.color || "#6D28D9";
+    var c2 = theme.color2 || shade(c, 26);
+    var st = document.body.style;
+    st.setProperty("--purple", c);
+    st.setProperty("--purple2", c2);
+    st.setProperty("--accent-rgb", hexRgb(c).join(","));
+    st.setProperty("--accent2-rgb", hexRgb(c2).join(","));
+    st.setProperty("--accent-ink", readableInk(c));
+    st.setProperty("--on-accent", onAccent(mix(c, c2, 0.5)));
+    st.setProperty("--pad-c1", padTone(c));
+    st.setProperty("--pad-c2", padTone(c2));
+    st.setProperty("--logo-c1", padTone(c));
+    st.setProperty("--logo-c2", padTone(c2));
+    st.setProperty("--deep1", mix(c, "#14102B", 0.86));
+    st.setProperty("--deep2", mix(c, "#201845", 0.76));
+    st.setProperty("--purple-soft", theme.dark ? mix(c, "#0A0D1C", 0.80) : mix(c, "#FFFFFF", 0.93));
+    document.body.classList.toggle("dark", !!theme.dark);
+    syncAppearanceControls();
+  }
+  function syncAppearanceControls(){
+    var seg = $("seg-mode");
+    if (seg) seg.querySelectorAll("button").forEach(function(b){
+      b.classList.toggle("on", (b.getAttribute("data-mode") === "dark") === !!theme.dark);
+    });
+    document.querySelectorAll(".sw").forEach(function(s){
+      s.classList.toggle("on", s.getAttribute("data-color").toLowerCase() === (theme.color || "").toLowerCase() && !theme.color2);
+    });
+    document.querySelectorAll(".gr").forEach(function(g){
+      g.classList.toggle("on",
+        g.getAttribute("data-c1").toLowerCase() === (theme.color || "").toLowerCase() &&
+        g.getAttribute("data-c2").toLowerCase() === (theme.color2 || "").toLowerCase());
+    });
+    var cc = $("custom-color");
+    if (cc){ cc.value = theme.color || "#6D28D9"; $("custom-hex").textContent = (theme.color || "#6D28D9").toUpperCase(); }
+    var cc2 = $("custom-color2");
+    if (cc2){
+      var eff2 = theme.color2 || shade(theme.color || "#6D28D9", 26);
+      cc2.value = eff2; $("custom-hex2").textContent = eff2.toUpperCase();
+    }
+  }
+  var autominsVal = 0;
+  function currentSettings(){
+    return { cmd: "settings",
+      startup: $("sw-startup").checked,
+      relock: $("sw-relock").checked,
+      autolock: $("sw-autolock").checked,
+      sounds: $("sw-sounds").checked,
+      pclock: $("sw-pclock").checked,
+      intruder: $("sw-intruder").checked,
+      encrypt: $("sw-encrypt").checked,
+      contextmenu: $("sw-contextmenu").checked,
+      lite: $("sw-lite").checked,
+      automins: autominsVal,
+      theme: theme.color, theme2: theme.color2, dark: theme.dark };
+  }
+  function saveAppearance(){ post(currentSettings()); }
+
+  var PRESETS = ["#6D28D9","#2563EB","#0284C7","#0D9488","#16A34A","#D97706","#EA580C","#DB2777","#DC2626"];
+  PRESETS.forEach(function(c){
+    var b = document.createElement("button");
+    b.className = "sw"; b.style.background = c; b.setAttribute("data-color", c); b.title = c;
+    b.addEventListener("click", function(){ theme.color = c; theme.color2 = ""; applyTheme(); saveAppearance(); });
+    $("swatches").appendChild(b);
+  });
+  var GRADIENTS = [
+    ["#7C3AED","#DB2777"], ["#2563EB","#06B6D4"], ["#F59E0B","#EF4444"],
+    ["#16A34A","#84CC16"], ["#4F46E5","#7C3AED"], ["#E11D63","#F59E0B"],
+    ["#0EA5A4","#2563EB"], ["#111827","#6D28D9"]
+  ];
+  GRADIENTS.forEach(function(g){
+    var b = document.createElement("button");
+    b.className = "gr";
+    b.style.background = "linear-gradient(135deg," + g[0] + "," + g[1] + ")";
+    b.setAttribute("data-c1", g[0]); b.setAttribute("data-c2", g[1]);
+    b.title = g[0] + " → " + g[1];
+    b.addEventListener("click", function(){ theme.color = g[0]; theme.color2 = g[1]; applyTheme(); saveAppearance(); });
+    $("grads").appendChild(b);
+  });
+  $("seg-mode").querySelectorAll("button").forEach(function(b){
+    b.addEventListener("click", function(){
+      theme.dark = b.getAttribute("data-mode") === "dark";
+      applyTheme(); saveAppearance();
+    });
+  });
+  $("custom-color").addEventListener("input", function(e){
+    theme.color = e.target.value; applyTheme();
+  });
+  $("custom-color").addEventListener("change", function(){ saveAppearance(); });
+  $("custom-color2").addEventListener("input", function(e){
+    theme.color2 = e.target.value; applyTheme();
+  });
+  $("custom-color2").addEventListener("change", function(){ saveAppearance(); });
+
+  /* ---------------- busy overlay ---------------- */
+  var busyAt = 0;
+  function showBusy(text){
+    $("busy-text").textContent = text || "Unlocking…";
+    $("busy").classList.add("show");
+    busyAt = Date.now();
+    setBusyProgress(null, null, null);
+  }
+  function hideBusy(){
+    var wait = Math.max(0, 550 - (Date.now() - busyAt));
+    setTimeout(function(){
+      $("busy").classList.remove("show");
+      setBusyProgress(null, null, null);
+    }, wait);
+  }
+  /* v4.1.0: preloader progress bar. done/total null = indeterminate
+     (spinner only, e.g. a quick pattern check with no file count). */
+  function setBusyProgress(text, done, total){
+    var wrap = $("busy-barwrap"), bar = $("busy-bar"), pct = $("busy-pct");
+    if (!wrap) return;
+    if (text) $("busy-text").textContent = text;
+    if (done != null && total != null && total > 0){
+      var p = Math.max(0, Math.min(100, Math.round(done / total * 100)));
+      wrap.classList.add("show"); pct.classList.add("show");
+      bar.style.width = p + "%";
+      pct.textContent = p + "%  ·  file " + done + " of " + total;
+    } else {
+      wrap.classList.remove("show"); pct.classList.remove("show");
+      bar.style.width = "0%"; pct.textContent = "";
+    }
+  }
+  /* v4.1.0: per-folder progress bar under the folder's own row. */
+  function setFolderProgress(folderId, text, done, total){
+    if (!folderId) return;
+    var card = document.querySelector('[data-prog-for="' + folderId + '"]');
+    if (!card) return;
+    var bar = card.querySelector(".fprog i"), label = card.querySelector(".fprog-t");
+    if (done != null && total != null && total > 0){
+      var p = Math.max(0, Math.min(100, Math.round(done / total * 100)));
+      if (bar) bar.style.width = p + "%";
+      if (label) label.textContent = (text || "Working…") + " — " + p + "% (file " + done + " of " + total + ")";
+    } else if (label && text) label.textContent = text;
+  }
+  function showLockedSuccess(name, files, encrypted, lockMode){
+    var t = $("locked-success-text"), sub = $("locked-success-sub");
+    if (t) t.innerHTML = "<b>" + esc(name) + "</b> is locked.";
+    if (sub){
+      var f = (files != null && files > 0) ? files + (files === 1 ? " file" : " files") + " inside" : "Folder contents";
+      sub.textContent = f + (lockMode === "high"
+        ? (encrypted ? " · AES-256 encrypted ✓" : " · encryption will finish on your next sign-in")
+        : " · Just Lock — no encryption, opens instantly");
+    }
+    var m = $("modal-locked");
+    if (m) m.classList.add("show");
+  }
+  function hideLockedSuccess(){
+    var m = $("modal-locked");
+    if (m) m.classList.remove("show");
+  }
+
+  /* ---------------- unlock tabs ---------------- */
+  var unlockTab = "pattern";
+  function setUnlockTab(t){
+    unlockTab = t;
+    $("unlock-pattern-block").style.display = t === "pattern" ? "" : "none";
+    $("unlock-pass-block").style.display = t === "passcode" ? "" : "none";
+    animatePane(t === "pattern" ? $("unlock-pattern-block") : $("unlock-pass-block"));
+    $("unlock-tabs").querySelectorAll("button").forEach(function(b){
+      b.classList.toggle("on", b.getAttribute("data-tab") === t);
+    });
+    setActivePin(t === "passcode" ? pinUnlock : null);
+  }
+  $("unlock-tabs").querySelectorAll("button").forEach(function(b){
+    b.addEventListener("click", function(){ setUnlockTab(b.getAttribute("data-tab")); });
+  });
+
+  /* ---------------- pattern pad ---------------- */
+  function middleDot(a, b){
+    var ax = a % 3, ay = Math.floor(a / 3), bx = b % 3, by = Math.floor(b / 3);
+    var dx = bx - ax, dy = by - ay;
+    if ((Math.abs(dx) === 2 && dy === 0) || (Math.abs(dy) === 2 && dx === 0) ||
+        (Math.abs(dx) === 2 && Math.abs(dy) === 2))
+      return Math.floor((ay + by) / 2) * 3 + Math.floor((ax + bx) / 2);
+    return -1;
+  }
+  function PatternPad(el, onDone){
+    var SIZE = 236, M = 46, STEP = (SIZE - M*2)/2, HIT = 33;
+    var centers = [];
+    for (var r = 0; r < 3; r++) for (var c = 0; c < 3; c++)
+      centers.push({x: M + c*STEP, y: M + r*STEP});
+    el.innerHTML = "";
+    var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("viewBox", "0 0 " + SIZE + " " + SIZE);
+    // Each pad gets its OWN gradient (a shared one breaks when the first
+    // pad sits inside a hidden screen). Stops follow the theme via CSS vars.
+    PatternPad._n = (PatternPad._n || 0) + 1;
+    var gid = "padGrad" + PatternPad._n;
+    var NS = "http://www.w3.org/2000/svg";
+    var defs = document.createElementNS(NS, "defs");
+    var grad = document.createElementNS(NS, "linearGradient");
+    grad.setAttribute("id", gid);
+    // userSpaceOnUse is essential: with the default objectBoundingBox units,
+    // a perfectly vertical or horizontal line has a zero-size bounding box
+    // and Chromium paints NOTHING for it — the "missing line" bug.
+    grad.setAttribute("gradientUnits", "userSpaceOnUse");
+    grad.setAttribute("x1", "0"); grad.setAttribute("y1", "0");
+    grad.setAttribute("x2", SIZE); grad.setAttribute("y2", SIZE);
+    var stop1 = document.createElementNS(NS, "stop");
+    stop1.setAttribute("offset", "0"); stop1.style.stopColor = "var(--pad-c1)";
+    var stop2 = document.createElementNS(NS, "stop");
+    stop2.setAttribute("offset", "1"); stop2.style.stopColor = "var(--pad-c2)";
+    grad.appendChild(stop1); grad.appendChild(stop2);
+    defs.appendChild(grad);
+    svg.appendChild(defs);
+    var poly = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+    poly.setAttribute("stroke", "url(#" + gid + ")");
+    var live = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    live.setAttribute("stroke", "url(#" + gid + ")");
+    live.style.display = "none";
+    svg.appendChild(poly); svg.appendChild(live);
+    el.appendChild(svg);
+    var dotEls = [];
+    centers.forEach(function(p, i){
+      var d = document.createElement("div");
+      d.className = "dot";
+      // Percentages, not pixels: the pad must stay correct at ANY size
+      // (the setup screen uses a smaller pad than login/unlock).
+      d.style.left = (p.x / SIZE * 100) + "%"; d.style.top = (p.y / SIZE * 100) + "%";
+      el.appendChild(d); dotEls.push(d);
+    });
+    var dots = [], drawing = false;
+    function refresh(){
+      dotEls.forEach(function(d, i){ d.classList.toggle("on", dots.indexOf(i) >= 0); });
+      poly.setAttribute("points", dots.map(function(i){
+        return centers[i].x + "," + centers[i].y; }).join(" "));
+    }
+    function pos(e){
+      var r = el.getBoundingClientRect();
+      // Scale the pointer into the 236-unit grid, whatever the pad's
+      // rendered size is.
+      return {
+        x: (e.clientX - r.left) * SIZE / Math.max(r.width, 1),
+        y: (e.clientY - r.top) * SIZE / Math.max(r.height, 1)
+      };
+    }
+    function tryAdd(p){
+      for (var i = 0; i < 9; i++){
+        var dx = p.x - centers[i].x, dy = p.y - centers[i].y;
+        if (dx*dx + dy*dy <= HIT*HIT && dots.indexOf(i) < 0){
+          // Same rule as the original pad: jumping over a dot includes it.
+          if (dots.length){
+            var mid = middleDot(dots[dots.length - 1], i);
+            if (mid >= 0 && dots.indexOf(mid) < 0) dots.push(mid);
+          }
+          dots.push(i); refresh(); return;
+        }
+      }
+    }
+    el.addEventListener("pointerdown", function(e){
+      if (e.button !== 0) return;
+      dots = []; refresh();
+      var p = pos(e); tryAdd(p);
+      if (!dots.length) return; // must start on a dot, like the original pad
+      drawing = true;
+      try { el.setPointerCapture(e.pointerId); } catch(_){}
+      live.style.display = ""; moveLive(p);
+      e.preventDefault();
+    });
+    function moveLive(p){
+      if (!dots.length) return;
+      var last = centers[dots[dots.length-1]];
+      live.setAttribute("x1", last.x); live.setAttribute("y1", last.y);
+      live.setAttribute("x2", p.x); live.setAttribute("y2", p.y);
+    }
+    el.addEventListener("pointermove", function(e){
+      if (!drawing) return;
+      var p = pos(e); tryAdd(p); moveLive(p);
+    });
+    function finish(){
+      if (!drawing) return;
+      drawing = false; live.style.display = "none";
+      if (dots.length) onDone(dots.slice());
+    }
+    el.addEventListener("pointerup", finish);
+    el.addEventListener("pointercancel", finish);
+    return {
+      reset: function(){ dots = []; drawing = false; live.style.display = "none"; refresh(); },
+      refresh: refresh
+    };
+  }
+
+  /* ---------------- state ---------------- */
+  var S = null;
+  var toastTimer = null;
+  function showToast(text, isError){
+    var t = $("toast");
+    t.textContent = text;
+    t.className = isError ? "error show" : "show";
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ t.className = isError ? "error" : ""; }, 3400);
+  }
+  function showScreen(id){
+    ["screen-setup","screen-login","screen-unlock","screen-admin","screen-installer","screen-recovery"].forEach(function(s){
+      $(s).classList.toggle("active", s === id);
+    });
+    if (id === "screen-admin") setActivePin(null);
+  }
+  function authFail(errId, cardId, pad){
+    var err = $(errId);
+    if (err){ /* text is set by caller */ }
+    var card = $(cardId);
+    if (card){ card.classList.remove("shake"); void card.offsetWidth; card.classList.add("shake"); }
+    if (pad) setTimeout(function(){ pad.reset(); }, 350);
+  }
+
+  /* ---------------- pads ---------------- */
+  var setupDots = [], modalDots = [];
+  var padSetup = PatternPad($("pad-setup"), function(d){
+    if (d.length >= 4){
+      setupDots = d;
+      $("setup-captured").classList.add("show");
+      hideErr("setup-error");
+    } else {
+      setupDots = [];
+      showErr("setup-error", "That pattern is too short — use at least 4 dots.");
+    }
+    validateSetup();
+  });
+  var padLogin = PatternPad($("pad-login"), function(d){
+    if (d.length >= 4){ hideErr("login-error"); showBusy("Unlocking panel…"); post({cmd:"verifyPattern", dots:d}); }
+    else { showErr("login-error", "Use at least 4 dots."); setTimeout(function(){ padLogin.reset(); }, 350); }
+  });
+  var padUnlock = PatternPad($("pad-unlock"), function(d){
+    if (d.length >= 4){ hideErr("unlock-error"); showBusy("Unlocking folder…"); post({cmd:"authUnlock", dots:d, passcode:""}); }
+    else { showErr("unlock-error", "Use at least 4 dots."); setTimeout(function(){ padUnlock.reset(); }, 350); }
+  });
+  var padModal = PatternPad($("pad-modal"), function(d){
+    if (d.length >= 4){ modalDots = d; $("btn-pattern-save").disabled = false; }
+  });
+  var fauthId = null, fauthDots = [];
+  var padFauth = PatternPad($("pad-fauth"), function(d){
+    if (d.length >= 4 && fauthId){
+      fauthDots = d;
+      post({cmd:"unlockWithCreds", id: fauthId, dots: d, passcode: ""});
+    }
+  });
+  var pinFauth = makePinPad($("pin-fauth"), {
+    small: true,
+    onEnter: function(){ $("btn-fauth-unlock").click(); }
+  });
+  wireKbdLink("link-fauth-kbd", "fauth-kbd-block", "fauth-pass");
+  $("btn-fauth-unlock").addEventListener("click", function(){
+    var v = kbdVisible("fauth-kbd-block") ? $("fauth-pass").value : pinFauth.value;
+    if (v && fauthId) post({cmd:"unlockWithCreds", id: fauthId, dots: [], passcode: v});
+    else if (fauthDots.length >= 4 && fauthId) post({cmd:"unlockWithCreds", id: fauthId, dots: fauthDots, passcode: ""});
+  });
+  $("fauth-pass").addEventListener("keydown", function(e){
+    if (e.key === "Enter") $("btn-fauth-unlock").click();
+  });
+
+  /* ---------------- sound effects (tiny synth, no files) ---------------- */
+  var AC = null;
+  function tone(freq, delay, dur, type, vol){
+    if (!AC) return;
+    var o = AC.createOscillator(), g = AC.createGain();
+    o.type = type; o.frequency.value = freq;
+    var t = AC.currentTime + delay;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol, t + 0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(AC.destination);
+    o.start(t); o.stop(t + dur + 0.05);
+  }
+  function sfx(kind){
+    if (typeof S === "undefined" || !S || !S.settings || S.settings.sounds === false) return;
+    try {
+      if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)();
+      if (AC.state === "suspended") AC.resume();
+      if (kind === "unlock"){ tone(587, 0, .09, "sine", .055); tone(880, .07, .13, "sine", .045); }
+      else if (kind === "lock"){ tone(740, 0, .08, "sine", .045); tone(494, .06, .12, "sine", .045); }
+      else if (kind === "error"){ tone(196, 0, .15, "triangle", .05); }
+    } catch(_){}
+  }
+
+  /* ---------------- freeze countdown ---------------- */
+  var freezeInt = null, freezeEndAt = 0;
+  function updateFreezeText(){
+    var left = Math.max(0, Math.ceil((freezeEndAt - Date.now()) / 1000));
+    var txt = "Too many wrong tries — input is frozen for " + left + "s";
+    ["login-freeze","unlock-freeze"].forEach(function(id){
+      var el = $(id); if (el) el.textContent = txt;
+    });
+    if (left <= 0){
+      if (freezeInt){ clearInterval(freezeInt); freezeInt = null; }
+      document.body.classList.remove("frozen");
+      ["login-freeze","unlock-freeze"].forEach(function(id){
+        var el = $(id); if (el) el.classList.remove("show");
+      });
+      post({cmd:"ready"});
+    }
+  }
+  function handleFreeze(){
+    var secs = (typeof S !== "undefined" && S) ? (S.frozenSecs || 0) : 0;
+    document.body.classList.toggle("frozen", secs > 0);
+    if (secs > 0){
+      freezeEndAt = Date.now() + secs * 1000;
+      ["login-freeze","unlock-freeze"].forEach(function(id){
+        var el = $(id); if (el) el.classList.add("show");
+      });
+      updateFreezeText();
+      if (!freezeInt) freezeInt = setInterval(updateFreezeText, 500);
+    } else if (freezeInt){
+      clearInterval(freezeInt); freezeInt = null;
+      ["login-freeze","unlock-freeze"].forEach(function(id){
+        var el = $(id); if (el) el.classList.remove("show");
+      });
+    }
+  }
+
+  function showErr(id, text){
+    var e = $(id); e.textContent = text; e.classList.add("show");
+  }
+  function hideErr(id){ $(id).classList.remove("show"); }
+
+  /* ---------------- PIN pad (iPhone style) ---------------- */
+  var activePin = null;
+  function setActivePin(p){ activePin = p; }
+  function animatePane(el){
+    if (!el) return;
+    el.classList.remove("pane-in");
+    void el.offsetWidth; // restart the animation
+    el.classList.add("pane-in");
+  }
+  function makePinPad(el, opts){
+    opts = opts || {};
+    var value = "";
+    var letters = {"2":"ABC","3":"DEF","4":"GHI","5":"JKL","6":"MNO","7":"PQRS","8":"TUV","9":"WXYZ"};
+    el.classList.add("pinpad");
+    if (opts.small) el.classList.add("small");
+    el.innerHTML = '<div class="pindots"></div><div class="pinkeys"></div>';
+    var dotsEl = el.querySelector(".pindots"), keysEl = el.querySelector(".pinkeys");
+    var api = null;
+    function render(){
+      var total = Math.max(4, value.length), h = "";
+      for (var i = 0; i < total; i++) h += '<i class="' + (i < value.length ? "on" : "") + '"></i>';
+      dotsEl.innerHTML = h;
+    }
+    function press(k){
+      if (opts.isLocked && opts.isLocked()) return;
+      setActivePin(api);
+      if (k === "del") value = value.slice(0, -1);
+      else if (value.length < 12) value += k;
+      render();
+      if (opts.onChange) opts.onChange(value);
+    }
+    ["1","2","3","4","5","6","7","8","9","","0","del"].forEach(function(k){
+      var b = document.createElement("button");
+      b.type = "button";
+      if (k === ""){ b.className = "pinkey fn"; b.style.visibility = "hidden"; }
+      else if (k === "del"){ b.className = "pinkey fn"; b.textContent = "⌫"; }
+      else {
+        b.className = "pinkey";
+        b.innerHTML = '<span class="d">' + k + '</span>'
+          + (letters[k] ? '<span class="l">' + letters[k] + '</span>' : '');
+      }
+      b.addEventListener("click", function(){ press(k); });
+      keysEl.appendChild(b);
+    });
+    api = {
+      get value(){ return value; },
+      press: press,
+      enter: function(){ if (opts.onEnter) opts.onEnter(); },
+      clear: function(){
+        value = ""; render();
+        if (opts.onChange) opts.onChange(value);
+      },
+      shake: function(){
+        dotsEl.classList.remove("shake");
+        void dotsEl.offsetWidth;
+        dotsEl.classList.add("shake");
+      }
+    };
+    render();
+    return api;
+  }
+  document.addEventListener("keydown", function(e){
+    if (!activePin) return;
+    var t = e.target;
+    if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA")) return;
+    if (/^[0-9]$/.test(e.key)) activePin.press(e.key);
+    else if (e.key === "Backspace"){ e.preventDefault(); activePin.press("del"); }
+    else if (e.key === "Enter") activePin.enter();
+  });
+  function wireKbdLink(linkId, blockId, inputId){
+    $(linkId).addEventListener("click", function(){
+      var b = $(blockId);
+      var show = b.style.display === "none";
+      b.style.display = show ? "" : "none";
+      if (show) $(inputId).focus();
+    });
+  }
+  function kbdVisible(blockId){ return $(blockId).style.display !== "none"; }
+
+  /* ---------------- setup ---------------- */
+  var setupPassValue = "", setupFirst = "", setupStep = 1, setupPassOk = false;
+  function passState(){ return setupPassOk ? "ok" : "none"; }
+  function validateSetup(){
+    $("btn-setup-create").disabled = !(setupDots.length >= 4 || passState() === "ok");
+  }
+  var pinSetup = makePinPad($("pin-setup"), {
+    small: true,
+    isLocked: function(){ return setupStep === 3; },
+    onChange: function(v){
+      if (setupStep === 1){
+        $("btn-setup-pin-next").style.display = v.length >= 4 ? "" : "none";
+      } else if (setupStep === 2 && v.length === setupFirst.length){
+        if (v === setupFirst){
+          setupStep = 3; setupPassOk = true; setupPassValue = v;
+          $("setup-pin-step").textContent = "Passcode set — both entries match.";
+          $("btn-setup-pin-reset").style.display = "";
+        } else {
+          pinSetup.shake();
+          setupStep = 1; setupFirst = "";
+          $("setup-pin-step").textContent = "Those did not match. Choose your passcode again.";
+          $("btn-setup-pin-reset").style.display = "none";
+          setTimeout(function(){ pinSetup.clear(); }, 380);
+        }
+      }
+      validateSetup();
+    },
+    onEnter: function(){
+      if (setupStep === 1 && pinSetup.value.length >= 4) $("btn-setup-pin-next").click();
+    }
+  });
+  $("btn-setup-pin-next").addEventListener("click", function(){
+    setupFirst = pinSetup.value; setupStep = 2; pinSetup.clear();
+    $("btn-setup-pin-next").style.display = "none";
+    $("btn-setup-pin-reset").style.display = "";
+    $("setup-pin-step").textContent = "Enter the same passcode again to confirm it.";
+    setActivePin(pinSetup);
+  });
+  $("btn-setup-pin-reset").addEventListener("click", function(){
+    setupStep = 1; setupFirst = ""; setupPassOk = false; setupPassValue = "";
+    pinSetup.clear();
+    $("btn-setup-pin-next").style.display = "none";
+    $("btn-setup-pin-reset").style.display = "none";
+    $("setup-pin-step").textContent = "Choose a passcode — at least 4 digits, like a phone PIN.";
+    setActivePin(pinSetup);
+  });
+  var setupTab = "pattern";
+  function setSetupTab(t){
+    setupTab = t;
+    $("setup-pattern-block").style.display = t === "pattern" ? "" : "none";
+    $("setup-pass-block").style.display = t === "passcode" ? "" : "none";
+    animatePane(t === "pattern" ? $("setup-pattern-block") : $("setup-pass-block"));
+    $("setup-tabs").querySelectorAll("button").forEach(function(b){
+      b.classList.toggle("on", b.getAttribute("data-tab") === t);
+    });
+    setActivePin(t === "passcode" ? pinSetup : null);
+  }
+  $("setup-tabs").querySelectorAll("button").forEach(function(b){
+    b.addEventListener("click", function(){ setSetupTab(b.getAttribute("data-tab")); });
+  });
+  $("setup-redraw").addEventListener("click", function(){
+    setupDots = []; padSetup.reset();
+    $("setup-captured").classList.remove("show");
+    validateSetup();
+  });
+  $("btn-setup-create").addEventListener("click", function(){
+    hideErr("setup-error");
+    post({ cmd:"setup", dots:setupDots,
+           passcode: passState() === "ok" ? setupPassValue : "" });
+  });
+
+  /* ---------------- login / unlock ---------------- */
+  var pinLogin = makePinPad($("pin-login"), {
+    small: true,
+    onEnter: function(){ $("btn-login-pass").click(); }
+  });
+  var pinUnlock = makePinPad($("pin-unlock"), {
+    small: true,
+    onEnter: function(){ $("btn-unlock-pass").click(); }
+  });
+  wireKbdLink("link-login-kbd", "login-kbd-block", "login-pass");
+  wireKbdLink("link-unlock-kbd", "unlock-kbd-block", "unlock-pass");
+  var loginTab = "pattern";
+  function setLoginTab(t){
+    loginTab = t;
+    $("login-pattern-block").style.display = t === "pattern" ? "" : "none";
+    $("login-pass-block").style.display = t === "passcode" ? "" : "none";
+    animatePane(t === "pattern" ? $("login-pattern-block") : $("login-pass-block"));
+    $("login-tabs").querySelectorAll("button").forEach(function(b){
+      b.classList.toggle("on", b.getAttribute("data-tab") === t);
+    });
+    setActivePin(t === "passcode" ? pinLogin : null);
+  }
+  $("login-tabs").querySelectorAll("button").forEach(function(b){
+    b.addEventListener("click", function(){ setLoginTab(b.getAttribute("data-tab")); });
+  });
+  $("btn-login-pass").addEventListener("click", function(){
+    var v = kbdVisible("login-kbd-block") ? $("login-pass").value : pinLogin.value;
+    if (v){ showBusy("Unlocking panel…"); post({cmd:"verifyPasscode", passcode:v}); }
+  });
+  $("login-pass").addEventListener("keydown", function(e){
+    if (e.key === "Enter") $("btn-login-pass").click();
+  });
+  $("btn-unlock-pass").addEventListener("click", function(){
+    var v = kbdVisible("unlock-kbd-block") ? $("unlock-pass").value : pinUnlock.value;
+    if (v){ showBusy("Unlocking folder…"); post({cmd:"authUnlock", dots:[], passcode:v}); }
+  });
+  $("unlock-pass").addEventListener("keydown", function(e){
+    if (e.key === "Enter") $("btn-unlock-pass").click();
+  });
+
+  /* ---------------- admin ---------------- */
+  var pendingRemove = null;
+  var FOLDER_SVG = '<svg viewBox="0 0 24 24"><path d="M3 7.2A2.2 2.2 0 0 1 5.2 5h3.6l2.2 2.6h7.8A2.2 2.2 0 0 1 21 9.8V17a2.2 2.2 0 0 1-2.2 2.2H5.2A2.2 2.2 0 0 1 3 17z"/></svg>';
+  var TOOL_NOTE = '<svg viewBox="0 0 24 24" width="16" height="16"><path d="M5 5.5A1.5 1.5 0 0 1 6.5 4H17a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6.5A1.5 1.5 0 0 1 5 18.5z"/><path d="M9 9h6M9 13h4"/></svg>';
+  var TOOL_KEY = '<svg viewBox="0 0 24 24" width="16" height="16"><circle cx="8.5" cy="14.5" r="4.2"/><path d="M11.6 11.4 19 4M16 7l3 3M13.4 9.8l2.4 2.4"/></svg>';
+  var TOOL_COLOR = '<svg viewBox="0 0 24 24" width="16" height="16"><circle cx="12" cy="12" r="8.6"/><circle cx="9" cy="10" r="1.15" style="fill:currentColor;stroke:none"/><circle cx="14.6" cy="8.8" r="1.15" style="fill:currentColor;stroke:none"/><circle cx="15.4" cy="14.4" r="1.15" style="fill:currentColor;stroke:none"/></svg>';
+  var TOOL_LOCK = '<svg viewBox="0 0 24 24" width="16" height="16"><rect x="5.5" y="10.5" width="13" height="9" rx="2.5"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></svg>';
+  function findFolder(id){
+    var f = null;
+    (S.folders || []).forEach(function(x){ if (x.id === id) f = x; });
+    return f;
+  }
+  function fmtSize(b){
+    if (b == null) return "";
+    if (b < 1024) return b + " B";
+    var u = ["KB","MB","GB","TB"], i = -1;
+    do { b /= 1024; i++; } while (b >= 1024 && i < u.length - 1);
+    return (b >= 100 ? Math.round(b) : b.toFixed(1)) + " " + u[i];
+  }
+  function folderCard(f){
+    var hasColor = !!f.color;
+    var tileCls = "ftile" + (!f.locked && !hasColor ? " open" : "");
+    var tileStyle = hasColor
+      ? ' style="background:linear-gradient(135deg,' + f.color + ',' + shade(f.color, 26) + ')"' : "";
+    var tileInner = hasColor
+      ? '<span class="ltr">' + esc((f.name || "F").charAt(0).toUpperCase()) + '</span>'
+      : FOLDER_SVG;
+    var pill = f.locked ? '<span class="pill locked">LOCKED</span>'
+                        : '<span class="pill open">OPEN</span>';
+    var main = f.busy
+      ? '<button class="fbtn" disabled>Working…</button>'
+      : f.locked
+      ? '<button class="fbtn primary" data-act="unlock" data-id="' + f.id + '">Unlock</button>'
+      : '<button class="fbtn" data-act="open" data-id="' + f.id + '">Open</button>'
+        + '<button class="fbtn primary" data-act="lock" data-id="' + f.id + '">Lock</button>';
+    var tools = S.decoyMode ? "" :
+      '<span class="iconbtns">'
+      + '<button class="fbtn ghost" data-tool="note" data-id="' + f.id + '" title="Folder note">' + TOOL_NOTE + '</button>'
+      + '<button class="fbtn ghost" data-tool="key" data-id="' + f.id + '" title="Folder key (own pattern / passcode)">' + TOOL_KEY + '</button>'
+      + '<button class="fbtn ghost" data-tool="color" data-id="' + f.id + '" title="Folder color">' + TOOL_COLOR + '</button>'
+      + '<button class="fbtn ghost" data-tool="lockmode" data-id="' + f.id + '" title="Lock mode — Just Lock or High End Lock">' + TOOL_LOCK + '</button>'
+      + '</span>';
+    return '<div class="foldercard">'
+      + '<div class="' + tileCls + '"' + tileStyle + '>' + tileInner + '</div>'
+      + '<div class="finfo"><div class="fname">' + esc(f.name) + '</div>'
+      + '<div class="fpath"><span class="fpath-t">' + esc(f.path) + '</span><span class="fsize" data-size-for="' + f.id + '"></span>'
+      + (f.hasOwn ? '<span class="owntag">OWN KEY</span>' : "")
+      + (f.encrypted ? '<span class="enctag">AES ENCRYPTED</span>' : "")
+      + (f.lockMode === "high" ? '<span class="modetag high">HIGH END</span>' : '<span class="modetag">JUST LOCK</span>')
+      /* v4.1.0: NEVER show "ENCRYPTION PENDING" while the job is still
+         running — that tag is what made users think a half-locked folder
+         was done. While busy the row shows its own progress bar; the
+         PENDING tag only appears after the job finished but encryption
+         is genuinely deferred (tray lock without the vault key), with a
+         tooltip saying exactly that. */
+      + (f.encPending && !f.busy ? '<span class="enctag pend" title="Encryption is waiting — it finishes automatically on your next sign-in with your pattern or passcode.">ENCRYPTION PENDING — finishes on next sign-in</span>' : "") + '</div>'
+      + (f.note ? '<div class="fnote">' + esc(f.note) + '</div>' : "")
+      + (f.busy ? '<div class="fprog" data-prog-for="' + f.id + '"><i></i></div><div class="fprog-t">Locking… please wait — do not close DarkBox.</div>' : "")
+      + '</div>'
+      + pill + main + tools
+      + '<button class="fbtn ghost" data-act="remove" data-id="' + f.id + '">Remove</button>'
+      + '</div>';
+  }
+  function applySizes(){
+    var total = 0, have = !!S.sizesMap;
+    document.querySelectorAll("[data-size-for]").forEach(function(sp){
+      var v = have ? S.sizesMap[sp.getAttribute("data-size-for")] : null;
+      sp.textContent = v != null ? " · " + fmtSize(v) : "";
+    });
+    (S.folders || []).forEach(function(f){
+      var v = have ? S.sizesMap[f.id] : null;
+      if (v != null) total += v;
+    });
+    var el = $("stat-size");
+    if (el){
+      if (have){ el.textContent = fmtSize(total); el.classList.remove("loading"); }
+      else { el.textContent = "···"; el.classList.add("loading"); }
+    }
+  }
+  var lastSizeReq = 0, sizeSig = "";
+  function requestSizes(){
+    if (S.decoyMode) return;
+    var sig = (S.folders || []).map(function(f){ return f.id + (f.locked ? "L" : "O"); }).join(",");
+    var now = Date.now();
+    if (sig === sizeSig && now - lastSizeReq < 60000) return;
+    sizeSig = sig; lastSizeReq = now;
+    post({cmd:"sizes"});
+  }
+  /* -------- activity -------- */
+  function actMeta(type){
+    var map = {
+      lock: ["", "Locked"], unlock: ["", "Unlocked"], add: ["", "Added"],
+      remove: ["warn", "Removed"], lockall: ["", "Lock all"],
+      fail: ["warn", "Wrong try"], freeze: ["bad", "Input frozen"],
+      intruder: ["bad", "Intruder photo"], device: ["warn", "Intruder info"],
+      decoy: ["warn", "Fake mode"],
+      pclock: ["warn", "PC locked"], autolock: ["", "Auto-lock"]
+    };
+    return map[type] || ["", type];
+  }
+  function fmtTime(iso){
+    var d = new Date(iso);
+    if (isNaN(d)) return iso || "";
+    var mon = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][d.getMonth()];
+    var h = d.getHours(), ap = h >= 12 ? "PM" : "AM";
+    h = h % 12 || 12;
+    return d.getDate() + " " + mon + " " + d.getFullYear() + ", " + h + ":"
+      + ("0" + d.getMinutes()).slice(-2) + " " + ap;
+  }
+  /* -------- activity (v4.1.0 redesign) -------- */
+  var actFilter = "all", actQuery = "";
+  function actGroup(type){
+    if (type === "lock" || type === "unlock" || type === "add" || type === "remove" || type === "lockall") return "locks";
+    if (type === "fail" || type === "freeze") return "wrong";
+    if (type === "intruder" || type === "device") return "intruder";
+    return "system";
+  }
+  function actDayLabel(iso){
+    var d = new Date(iso);
+    if (isNaN(d)) return "Older";
+    var today = new Date(); today.setHours(0,0,0,0);
+    var day = new Date(d); day.setHours(0,0,0,0);
+    var diff = Math.round((today - day) / 86400000);
+    if (diff === 0) return "Today";
+    if (diff === 1) return "Yesterday";
+    var mon = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][d.getMonth()];
+    return d.getDate() + " " + mon + " " + d.getFullYear();
+  }
+  /* Intruder info lines ("PC: … · User: … · WiFi: … · IP: … · Location: …")
+     become a neat labelled block instead of one unreadable sentence. */
+  function actDeviceDetail(text){
+    var parts = String(text || "").split(" — ");
+    var body = parts.length > 1 ? parts.slice(1).join(" — ") : String(text || "");
+    var segs = body.split(" · ");
+    var labels = { "PC": "PC", "User": "User", "WiFi": "WiFi", "IP": "IP", "Location": "Location" };
+    var rows = [];
+    segs.forEach(function(seg){
+      var i = seg.indexOf(": ");
+      if (i < 0) { rows.push(esc(seg)); return; }
+      var k = seg.slice(0, i), v = seg.slice(i + 2);
+      rows.push('<span class="k">' + esc(labels[k] || k) + '</span><b>' + esc(v) + '</b>');
+    });
+    return rows.join("<br>");
+  }
+  function fmtClock(iso){
+    var d = new Date(iso);
+    if (isNaN(d)) return iso || "";
+    var h = d.getHours(), ap = h >= 12 ? "PM" : "AM";
+    h = h % 12 || 12;
+    return h + ":" + ("0" + d.getMinutes()).slice(-2) + " " + ap;
+  }
+  function renderActivity(){
+    var el = $("activity-list");
+    if (!el) return;
+    var acts = S.activity || [];
+    var q = (actQuery || "").toLowerCase();
+    var filtered = acts.filter(function(a){
+      if (actFilter !== "all" && actGroup(a.type) !== actFilter) return false;
+      if (q && String(a.text || "").toLowerCase().indexOf(q) < 0
+          && String(a.type || "").toLowerCase().indexOf(q) < 0) return false;
+      return true;
+    });
+    var cnt = $("activity-count");
+    if (cnt) cnt.textContent = filtered.length + " of " + acts.length + " events";
+    if (!acts.length){
+      el.innerHTML = '<div class="empty"><div class="big">Nothing yet</div>'
+        + 'Locks, unlocks, wrong tries and intruder photos will appear here.</div>';
+      return;
+    }
+    if (!filtered.length){
+      el.innerHTML = '<div class="empty"><div class="big">No matches</div>'
+        + 'Try a different search or filter.</div>';
+      return;
+    }
+    var html = "", lastDay = "";
+    filtered.forEach(function(a){
+      var meta = actMeta(a.type);
+      var day = actDayLabel(a.time);
+      if (day !== lastDay){ html += '<div class="act-date">' + esc(day) + '</div>'; lastDay = day; }
+      var isDevice = a.type === "device";
+      var isIntruder = a.type === "intruder";
+      var img = a.photo ? '<img src="intruder/' + esc(a.photo) + '" alt="" data-photo="' + esc(a.photo)
+        + '" data-when="' + esc(fmtTime(a.time)) + '" title="Click to view">' : "";
+      var detail = isDevice ? '<div class="act-detail">' + actDeviceDetail(a.text) + '</div>' : "";
+      var headline = isDevice ? "Intruder details" : esc(a.text);
+      html += '<div class="actrow ' + meta[0] + (isIntruder ? " intruder-card" : "") + '"><span class="actdot"></span>'
+        + '<div class="at"><div class="tx">' + headline
+        + '<span class="pill-mini">' + esc(meta[1]) + '</span></div>'
+        + '<div class="tm">' + fmtClock(a.time) + " · " + fmtTime(a.time).split(", ")[0] + "</div>"
+        + detail + "</div>" + img + "</div>";
+    });
+    el.innerHTML = html;
+  }
+  function renderAdmin(){
+    var total = S.folders.length, locked = 0;
+    S.folders.forEach(function(f){ if (f.locked) locked++; });
+    $("stat-total").textContent = total;
+    $("stat-locked").textContent = locked;
+    $("stat-open").textContent = total - locked;
+    var list = $("folder-list");
+    if (!total){
+      list.innerHTML = '<div class="empty"><div class="big">No folders yet</div>'
+        + 'Click "Add Folder" above and pick a folder — it will be locked right away and stay one double-click from opening.</div>';
+    } else {
+      var q = (folderQuery || "").toLowerCase();
+      var shown = S.folders.filter(function(f){
+        return !q || f.name.toLowerCase().indexOf(q) >= 0
+          || f.path.toLowerCase().indexOf(q) >= 0
+          || (f.note || "").toLowerCase().indexOf(q) >= 0;
+      });
+      if (folderSort === "name")
+        shown.sort(function(a, b){ return a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 1; });
+      else if (folderSort === "recent")
+        shown.reverse();
+      else if (folderSort === "size")
+        shown.sort(function(a, b){
+          var sm = S.sizesMap || {};
+          return (sm[b.id] || 0) - (sm[a.id] || 0);
+        });
+      list.innerHTML = shown.length
+        ? shown.map(folderCard).join("")
+        : '<div class="empty"><div class="big">No folder matches</div>Try a different search.</div>';
+    }
+    if (S.decoyMode && !S.sizesMap)
+      S.sizesMap = { d1: 2576980377, d2: 734003200, d3: 1610612736 };
+    applySizes();
+    requestSizes();
+    renderActivity();
+    $("sw-startup").checked = !!S.settings.startup;
+    $("sw-relock").checked = !!S.settings.relock;
+    $("sw-autolock").checked = !!S.settings.autolock;
+    $("sw-sounds").checked = !!S.settings.sounds;
+    $("sw-pclock").checked = !!S.settings.pclock;
+    $("sw-intruder").checked = !!S.settings.intruder;
+    $("sw-encrypt").checked = !!S.settings.encrypt;
+    $("sw-contextmenu").checked = S.settings.contextmenu !== false;
+    $("sw-lite").checked = !!S.settings.lite;
+    document.body.classList.toggle("lite", !!S.settings.lite);
+    $("recovery-status").textContent = S.hasRecovery
+      ? "Recovery is ON — a forgotten lock can be reset."
+      : "Recovery is NOT set — set it now, before you need it.";
+    $("update-current").textContent = "v" + (S.version || "—");
+    $("login-forgot").style.display = S.hasRecovery ? "" : "none";
+    $("unlock-forgot").style.display = S.hasRecovery ? "" : "none";
+    autominsVal = S.settings.automins || 0;
+    $("seg-automins").querySelectorAll("button").forEach(function(b){
+      b.classList.toggle("on", parseInt(b.getAttribute("data-mins"), 10) === autominsVal);
+    });
+    $("decoy-status").textContent = S.hasDecoy
+      ? "Fake mode is ON — a decoy credential is set."
+      : "Fake mode is OFF — no decoy credential yet.";
+    $("btn-decoy-clear").disabled = !S.hasDecoy;
+  }
+  $("folder-list").addEventListener("click", function(e){
+    var tb = e.target.closest("[data-tool]");
+    if (tb){
+      var tid = tb.getAttribute("data-id"), tool = tb.getAttribute("data-tool");
+      if (tool === "note") openNote(tid);
+      else if (tool === "key") openFolderKey(tid);
+      else if (tool === "color") openColorPop(tid, tb);
+      else if (tool === "lockmode") openLockMode(tid);
+      return;
+    }
+    var b = e.target.closest("[data-act]");
+    if (!b) return;
+    var id = b.getAttribute("data-id"), act = b.getAttribute("data-act");
+    if (act === "remove"){
+      pendingRemove = id;
+      var f = findFolder(id);
+      $("remove-text").textContent = f
+        ? '"' + f.name + '" will be removed from the locker.' + (f.locked ? " It is locked right now — it will be restored to its place first." : "")
+        : "The folder will be removed from the locker.";
+      $("modal-remove").classList.add("show");
+    } else {
+      post({cmd: act === "open" ? "openFolder" : act, id: id});
+    }
+  });
+  /* -------- in-app folder picker -------- */
+  var browseState = { path: "", parent: "", dirs: [], places: [] };
+  var browseSel = "";
+  var ICO_FOLDER = '<svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>';
+  var ICO_DRIVE = '<svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="10" rx="2"/><path d="M7 21h10M17 12h.01"/></svg>';
+  var ICO_PLACE = '<svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>';
+  function browseGo(path){ browseSel = ""; post({cmd:"browse", path: path || ""}); }
+  function renderBrowse(){
+    var st = browseState;
+    /* crumbs */
+    var ch = "";
+    if (!st.path){
+      ch = '<span class="crumb now">This PC</span>';
+    } else {
+      var parts = st.path.split("\\").filter(function(x){ return x !== ""; });
+      ch = '<span class="crumb" data-crumb="">This PC</span>';
+      var acc = parts[0] + "\\";
+      for (var i = 0; i < parts.length; i++){
+        if (i > 0) acc += parts[i] + "\\";
+        var isLast = i === parts.length - 1;
+        ch += '<span class="crumbsep">›</span><span class="crumb' + (isLast ? " now" : "")
+          + '" data-crumb="' + esc(acc.replace(/\\$/, "")) + '">'
+          + esc(i === 0 ? parts[0] + "\\" : parts[i]) + '</span>';
+      }
+    }
+    $("browse-crumbs").innerHTML = ch;
+    /* places rail */
+    var ph = '<div class="plh">QUICK ACCESS</div>'
+      + '<div class="pl' + (!st.path ? " on" : "") + '" data-place=""><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>This PC</div>';
+    ph += (st.places || []).map(function(p){
+      return '<div class="pl' + (st.path === p.path ? " on" : "") + '" data-place="' + esc(p.path) + '">'
+        + ICO_PLACE + esc(p.name) + '</div>';
+    }).join("");
+    $("browse-places").innerHTML = ph;
+    /* folder list */
+    var lh = (st.dirs || []).map(function(d){
+      return '<div class="brow' + (browseSel === d.path ? " sel" : "") + '" data-bpath="' + esc(d.path)
+        + '" data-drive="' + (d.drive ? "1" : "0") + '">' + (d.drive ? ICO_DRIVE : ICO_FOLDER)
+        + '<span class="bn">' + esc(d.name) + '</span></div>';
+    }).join("");
+    if (!lh) lh = '<div class="bempty">This folder is empty.<br>You can still protect the folder you are in — use “Add &amp; Lock” below.</div>';
+    $("browse-list").innerHTML = lh;
+    /* footer */
+    var target = browseSel || st.path;
+    var addBtn = $("btn-browse-add");
+    if (target){
+      $("browse-selected").innerHTML = "Selected: <b>" + esc(target) + "</b>";
+      addBtn.disabled = false;
+    } else {
+      $("browse-selected").textContent = "No folder selected — click a folder to select it.";
+      addBtn.disabled = true;
+    }
+    $("btn-browse-up").disabled = !st.path;
+    $("btn-browse-new").style.display = st.path ? "" : "none";
+    if (!st.path) $("browse-newrow").classList.remove("show");
+  }
+  $("btn-add").addEventListener("click", function(){
+    $("modal-browse").classList.add("show");
+    browseGo("");
+  });
+  $("browse-crumbs").addEventListener("click", function(e){
+    var c = e.target.closest("[data-crumb]");
+    if (c && !c.classList.contains("now")) browseGo(c.getAttribute("data-crumb"));
+  });
+  $("browse-places").addEventListener("click", function(e){
+    var p = e.target.closest("[data-place]");
+    if (p) browseGo(p.getAttribute("data-place"));
+  });
+  $("browse-list").addEventListener("click", function(e){
+    var r = e.target.closest("[data-bpath]");
+    if (!r) return;
+    if (r.getAttribute("data-drive") === "1"){ browseGo(r.getAttribute("data-bpath")); return; }
+    browseSel = r.getAttribute("data-bpath");
+    renderBrowse();
+  });
+  $("browse-list").addEventListener("dblclick", function(e){
+    var r = e.target.closest("[data-bpath]");
+    if (r) browseGo(r.getAttribute("data-bpath"));
+  });
+  $("btn-browse-up").addEventListener("click", function(){
+    if (browseState.path) browseGo(browseState.parent || "");
+  });
+  $("btn-browse-new").addEventListener("click", function(){
+    $("browse-newrow").classList.toggle("show");
+    $("browse-newname").focus();
+  });
+  $("btn-browse-create").addEventListener("click", function(){
+    var name = $("browse-newname").value.trim();
+    if (!name || !browseState.path) return;
+    $("browse-newname").value = "";
+    $("browse-newrow").classList.remove("show");
+    post({cmd:"makeFolder", parent: browseState.path, name: name});
+  });
+  $("btn-browse-add").addEventListener("click", function(){
+    var target = browseSel || browseState.path;
+    if (target) post({cmd:"addFolderPath", path: target});
+  });
+  $("btn-lockall").addEventListener("click", function(){ post({cmd:"lockAll"}); });
+  $("btn-remove-confirm").addEventListener("click", function(){
+    if (pendingRemove) post({cmd:"remove", id: pendingRemove});
+    pendingRemove = null;
+    $("modal-remove").classList.remove("show");
+  });
+  /* -------- shared pattern/passcode modals (global / decoy / folder) -------- */
+  var patternMode = { kind: "global", id: null };
+  var passMode = { kind: "global", id: null };
+  function openPatternModal(kind, id, title, sub){
+    patternMode = { kind: kind, id: id };
+    $("mpat-title").textContent = title;
+    $("mpat-sub").textContent = sub;
+    modalDots = []; padModal.reset();
+    $("btn-pattern-save").disabled = true;
+    $("modal-pattern").classList.add("show");
+  }
+  var mpFirst = "", mpStep = 1;
+  var pinModal = makePinPad($("pin-modal"), {
+    small: true,
+    onChange: function(v){ $("btn-pass-save").disabled = v.length < 4; },
+    onEnter: function(){ if (!$("btn-pass-save").disabled) $("btn-pass-save").click(); }
+  });
+  function openPassModal(kind, id, title, sub){
+    passMode = { kind: kind, id: id };
+    $("mpass-title").textContent = title;
+    $("mpass-sub").textContent = sub;
+    mpStep = 1; mpFirst = ""; pinModal.clear();
+    $("btn-pass-save").textContent = "Continue";
+    $("btn-pass-save").disabled = true;
+    $("modal-passcode").classList.add("show");
+    setActivePin(pinModal);
+  }
+  $("btn-change-pattern").addEventListener("click", function(){
+    openPatternModal("global", null, "Change pattern", "Draw the new pattern — at least 4 dots.");
+  });
+  $("btn-pattern-save").addEventListener("click", function(){
+    if (modalDots.length >= 4){
+      if (patternMode.kind === "global") post({cmd:"changePattern", dots: modalDots});
+      else if (patternMode.kind === "decoy") post({cmd:"setDecoyPattern", dots: modalDots});
+      else post({cmd:"folderPattern", id: patternMode.id, dots: modalDots});
+    }
+    $("modal-pattern").classList.remove("show");
+  });
+  $("btn-change-passcode").addEventListener("click", function(){
+    openPassModal("global", null, "Change passcode", "Set a new passcode of at least 4 digits.");
+  });
+  $("btn-pass-save").addEventListener("click", function(){
+    if (mpStep === 1){
+      mpFirst = pinModal.value; mpStep = 2; pinModal.clear();
+      $("mpass-sub").textContent = "Enter the same passcode again to confirm it.";
+      $("btn-pass-save").textContent = "Save Passcode";
+      $("btn-pass-save").disabled = true;
+      setActivePin(pinModal);
+      return;
+    }
+    var v = pinModal.value;
+    if (v !== mpFirst){
+      pinModal.shake();
+      mpStep = 1; mpFirst = ""; pinModal.clear();
+      $("mpass-sub").textContent = "Those did not match — start again. At least 4 digits.";
+      $("btn-pass-save").textContent = "Continue";
+      $("btn-pass-save").disabled = true;
+      return;
+    }
+    if (passMode.kind === "global") post({cmd:"changePasscode", passcode: v});
+    else if (passMode.kind === "decoy") post({cmd:"setDecoyPasscode", passcode: v});
+    else post({cmd:"folderPasscode", id: passMode.id, passcode: v});
+    $("modal-passcode").classList.remove("show");
+  });
+  /* -------- decoy buttons -------- */
+  $("btn-decoy-pattern").addEventListener("click", function(){
+    openPatternModal("decoy", null, "Decoy pattern",
+      "This pattern opens the FAKE panel. Pick something different from your real pattern.");
+  });
+  $("btn-decoy-passcode").addEventListener("click", function(){
+    openPassModal("decoy", null, "Decoy passcode",
+      "This passcode opens the FAKE panel. Pick something different from your real passcode.");
+  });
+  $("btn-decoy-clear").addEventListener("click", function(){ post({cmd:"clearDecoy"}); });
+  $("btn-clear-activity").addEventListener("click", function(){ post({cmd:"clearActivity"}); });
+  /* v4.1.0: Activity filters + search. */
+  $("act-chips").addEventListener("click", function(e){
+    var b = e.target.closest("[data-act-filter]");
+    if (!b) return;
+    actFilter = b.getAttribute("data-act-filter");
+    $("act-chips").querySelectorAll("button").forEach(function(x){
+      x.classList.toggle("on", x === b);
+    });
+    renderActivity();
+  });
+  $("activity-search").addEventListener("input", function(e){
+    actQuery = e.target.value || "";
+    renderActivity();
+  });
+  $("btn-locked-ok").addEventListener("click", hideLockedSuccess);
+  $("modal-locked").addEventListener("click", function(e){
+    if (e.target === $("modal-locked")) hideLockedSuccess();
+  });
+  /* -------- installer wizard -------- */
+  var installFinished = false;
+  function renderInstaller(){
+    var ins = S.installer || {};
+    if (installFinished){
+      $("inst-fresh").style.display = "none";
+      $("inst-update").style.display = "none";
+      $("inst-done").style.display = "";
+      $("inst-title").innerHTML = "You are <em>all set.</em>";
+      $("inst-lead").textContent = ins.setupDone
+        ? "DarkBox is installed, and your lock is already set up."
+        : "DarkBox is installed. One last step — choose your pattern or passcode.";
+      $("btn-inst-finish").textContent = ins.setupDone ? "Open DarkBox" : "Set Up Your Lock";
+      return;
+    }
+    $("inst-ver").textContent = "Version " + (ins.currentVersion || "") + " · Free · by Hamii Scripts";
+    if (ins.installed){
+      $("inst-fresh").style.display = "none";
+      $("inst-update").style.display = "";
+      $("inst-done").style.display = "none";
+      $("inst-title").innerHTML = "Welcome <em>back.</em>";
+      $("inst-lead").textContent = "DarkBox is already on this PC. Update it, reinstall it, or just open it.";
+      $("inst-cur").textContent = "DarkBox " + (ins.installedVersion || "") + " is currently installed.";
+      var same = ins.installedVersion && ins.installedVersion === ins.currentVersion;
+      $("btn-inst-update").textContent = same ? "Reinstall DarkBox " + (ins.currentVersion || "")
+                                             : "Update to DarkBox " + (ins.currentVersion || "");
+      $("btn-inst-reinstall").style.display = same ? "none" : "";
+    } else {
+      $("inst-fresh").style.display = "";
+      $("inst-update").style.display = "none";
+      $("inst-done").style.display = "none";
+      $("inst-title").innerHTML = "Welcome to <em>DarkBox.</em>";
+      $("inst-lead").textContent = "DarkBox protects your folders with a pattern or passcode — they lock themselves again the moment you close them.";
+    }
+  }
+  function runInstall(){
+    hideErr("inst-error");
+    showBusy("Installing DarkBox…");
+    post({cmd:"installRun"});
+  }
+  $("btn-inst-install").addEventListener("click", runInstall);
+  $("btn-inst-update").addEventListener("click", runInstall);
+  $("btn-inst-reinstall").addEventListener("click", runInstall);
+  $("btn-inst-open").addEventListener("click", function(){ post({cmd:"installOpen"}); });
+  $("btn-inst-finish").addEventListener("click", function(){ post({cmd:"installOpen"}); });
+
+  /* -------- intruder photo popup + save -------- */
+  var currentPhoto = "";
+  $("activity-list").addEventListener("click", function(e){
+    var img = e.target.closest("img[data-photo]");
+    if (!img) return;
+    currentPhoto = img.getAttribute("data-photo");
+    $("photo-big").src = "intruder/" + currentPhoto;
+    $("photo-when").textContent = "Captured on a wrong try · " + (img.getAttribute("data-when") || "");
+    $("modal-photo").classList.add("show");
+  });
+  $("btn-photo-save").addEventListener("click", function(){
+    if (currentPhoto) post({cmd:"savePhoto", file: currentPhoto});
+  });
+  /* -------- folder key modal -------- */
+  var fkeyId = null;
+  function openFolderKey(id){
+    fkeyId = id;
+    var f = findFolder(id);
+    $("fkey-title").textContent = "Key for \u201C" + (f ? f.name : "folder") + "\u201D";
+    $("fkey-text").textContent = f && f.hasOwn
+      ? "This folder has its own key. The panel pattern / passcode still works as a master key."
+      : "This folder uses the panel pattern / passcode. Give it its own key for extra protection — the panel key stays as a master key.";
+    $("modal-folderkey").classList.add("show");
+  }
+  $("btn-fkey-pattern").addEventListener("click", function(){
+    $("modal-folderkey").classList.remove("show");
+    openPatternModal("folder", fkeyId, "Folder pattern", "Draw this folder's own pattern — at least 4 dots.");
+  });
+  $("btn-fkey-passcode").addEventListener("click", function(){
+    $("modal-folderkey").classList.remove("show");
+    openPassModal("folder", fkeyId, "Folder passcode", "Set this folder's own passcode — at least 4 digits.");
+  });
+  $("btn-fkey-clear").addEventListener("click", function(){
+    if (fkeyId) post({cmd:"folderCredsClear", id: fkeyId});
+    $("modal-folderkey").classList.remove("show");
+  });
+  /* -------- folder note modal -------- */
+  var noteId = null;
+  function openNote(id){
+    noteId = id;
+    var f = findFolder(id);
+    $("note-input").value = f ? (f.note || "") : "";
+    $("modal-note").classList.add("show");
+    setTimeout(function(){ try { $("note-input").focus(); } catch(_){} }, 60);
+  }
+  $("btn-note-save").addEventListener("click", function(){
+    if (noteId) post({cmd:"setFolderNote", id: noteId, note: $("note-input").value});
+    $("modal-note").classList.remove("show");
+  });
+  $("note-input").addEventListener("keydown", function(e){
+    if (e.key === "Enter") $("btn-note-save").click();
+  });
+  /* -------- folder lock mode modal (v4.2.0) -------- */
+  var lockModeId = null;
+  function openLockMode(id){
+    lockModeId = id;
+    var f = findFolder(id);
+    $("lockmode-title").textContent = "Lock mode \u2014 " + (f ? f.name : "folder");
+    var cur = f && f.lockMode === "high" ? "high" : "just";
+    $("btn-mode-just").classList.toggle("on", cur === "just");
+    $("btn-mode-high").classList.toggle("on", cur === "high");
+    $("modal-lockmode").classList.add("show");
+  }
+  $("btn-mode-just").addEventListener("click", function(){
+    if (lockModeId) post({cmd:"setFolderLockMode", id: lockModeId, mode: "just"});
+    $("modal-lockmode").classList.remove("show");
+  });
+  $("btn-mode-high").addEventListener("click", function(){
+    if (lockModeId) post({cmd:"setFolderLockMode", id: lockModeId, mode: "high"});
+    $("modal-lockmode").classList.remove("show");
+  });
+  /* -------- folder color popover -------- */
+  var FOLDER_COLORS = ["#7C3AED","#2563EB","#0284C7","#0D9488","#16A34A","#D97706","#EA580C","#DB2777","#DC2626","#111827"];
+  var colorForId = null;
+  (function buildColorPop(){
+    var grid = $("colorpop-grid");
+    FOLDER_COLORS.forEach(function(c){
+      var b = document.createElement("button");
+      b.className = "cp";
+      b.style.background = "linear-gradient(135deg," + c + "," + shade(c, 26) + ")";
+      b.title = c;
+      b.addEventListener("click", function(){
+        if (colorForId) post({cmd:"setFolderColor", id: colorForId, color: c});
+        $("colorpop").classList.remove("show");
+      });
+      grid.appendChild(b);
+    });
+    var auto = document.createElement("button");
+    auto.className = "cp auto";
+    auto.textContent = "Theme";
+    auto.title = "Use the theme color";
+    auto.addEventListener("click", function(){
+      if (colorForId) post({cmd:"setFolderColor", id: colorForId, color: ""});
+      $("colorpop").classList.remove("show");
+    });
+    grid.appendChild(auto);
+  })();
+  function openColorPop(id, anchor){
+    colorForId = id;
+    var pop = $("colorpop");
+    var r = anchor.getBoundingClientRect();
+    pop.classList.add("show");
+    pop.style.left = Math.min(window.innerWidth - 214, Math.max(8, r.left - 140)) + "px";
+    pop.style.top = (r.bottom + 8) + "px";
+  }
+  document.addEventListener("click", function(e){
+    var pop = $("colorpop");
+    if (!pop.classList.contains("show")) return;
+    if (e.target.closest("#colorpop") || e.target.closest('[data-tool="color"]')) return;
+    pop.classList.remove("show");
+  });
+  function sendSettings(){ post(currentSettings()); }
+
+  /* ================= v4.0 wiring ================= */
+  var folderQuery = "", folderSort = "name", recovering = false, updateUrl = "";
+  $("folder-search").addEventListener("input", function(){
+    folderQuery = this.value;
+    if (S && S.authed) renderAdmin();
+  });
+  $("seg-sort").querySelectorAll("button").forEach(function(b){
+    b.addEventListener("click", function(){
+      folderSort = b.getAttribute("data-sort");
+      $("seg-sort").querySelectorAll("button").forEach(function(x){
+        x.classList.toggle("on", x === b);
+      });
+      if (S && S.authed) renderAdmin();
+    });
+  });
+
+  // --- recovery (settings side) ---
+  $("btn-recovery-code").addEventListener("click", function(){ post({cmd:"recoveryCode"}); });
+  $("btn-copy-code").addEventListener("click", function(){
+    var code = $("recovery-code-text").textContent.trim();
+    var btn = this;
+    function done(){
+      btn.textContent = "Copied ✓";
+      setTimeout(function(){ btn.textContent = "Copy Code"; }, 1800);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(code).then(done, function(){ fallback(); });
+    } else fallback();
+    function fallback(){
+      try {
+        var ta = document.createElement("textarea");
+        ta.value = code;
+        ta.style.position = "fixed"; ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+        done();
+      } catch(_){ showToast("Copy failed — please write the code down.", true); }
+    }
+  });
+  $("btn-recovery-question").addEventListener("click", function(){
+    $("recovery-modal-title").textContent = "Security question";
+    $("recovery-code-view").style.display = "none";
+    $("recovery-q-view").style.display = "";
+    $("modal-recovery").classList.add("show");
+  });
+  $("btn-recovery-q-save").addEventListener("click", function(){
+    var a = $("recovery-q-answer").value;
+    if (a.trim().length < 3){ showToast("That answer is too short.", true); return; }
+    post({cmd:"recoveryAnswer", question: $("recovery-q-select").value, answer: a});
+    $("recovery-q-answer").value = "";
+    $("modal-recovery").classList.remove("show");
+  });
+
+  // --- backup / restore ---
+  var backupMode = "backupExport";
+  function openBackup(mode){
+    backupMode = mode;
+    $("backup-title").textContent = mode === "backupExport" ? "Export encrypted backup" : "Restore from backup";
+    $("backup-text").textContent = mode === "backupExport"
+      ? "Choose a password for the backup file. You will pick where to save it next."
+      : "Enter the password of the backup file. You will pick the file next. Restoring replaces the current settings.";
+    $("backup-pass").value = "";
+    $("modal-backup").classList.add("show");
+  }
+  $("btn-backup-export").addEventListener("click", function(){ openBackup("backupExport"); });
+  $("btn-backup-restore").addEventListener("click", function(){ openBackup("backupRestore"); });
+  $("btn-backup-go").addEventListener("click", function(){
+    var pw = $("backup-pass").value;
+    if (pw.length < 4){ showToast("Password must be at least 4 characters.", true); return; }
+    $("modal-backup").classList.remove("show");
+    post({cmd: backupMode, password: pw});
+  });
+
+  // --- updates ---
+  $("btn-check-update").addEventListener("click", function(){
+    $("update-status").textContent = "Checking for updates…";
+    post({cmd:"checkUpdate"});
+  });
+  $("btn-get-update").addEventListener("click", function(){
+    if (updateUrl) post({cmd:"openUrl", url: updateUrl});
+  });
+
+  // --- recovery screen (forgot lock) ---
+  var recDots = [], recTab = "code", resetTab = "pattern";
+  var recStep = 1, recFirst = "", recPassOk = false, recPassValue = "";
+  var padRecover = new PatternPad($("pad-recover"), function(dots){
+    recDots = dots;
+    if (dots.length >= 4) $("recover-captured").classList.add("show");
+    validateReset();
+  });
+  $("recover-redraw").addEventListener("click", function(){
+    recDots = []; padRecover.reset();
+    $("recover-captured").classList.remove("show");
+    validateReset();
+  });
+  var pinRecover = makePinPad($("pin-recover"), { small: true,
+    isLocked: function(){ return recStep === 3; },
+    onChange: function(v){
+      if (recStep === 1){
+        $("btn-recover-pin-next").style.display = v.length >= 4 ? "" : "none";
+      } else if (recStep === 2 && v.length === recFirst.length){
+        if (v === recFirst){
+          recStep = 3; recPassOk = true; recPassValue = v;
+          $("recover-pin-step").textContent = "Passcode set — both entries match.";
+          $("btn-recover-pin-reset").style.display = "";
+        } else {
+          pinRecover.shake();
+          recStep = 1; recFirst = "";
+          $("recover-pin-step").textContent = "Those did not match. Choose a passcode — at least 4 digits.";
+          $("btn-recover-pin-reset").style.display = "none";
+          setTimeout(function(){ pinRecover.clear(); }, 380);
+        }
+      }
+      validateReset();
+    },
+    onEnter: function(){
+      if (recStep === 1 && pinRecover.value.length >= 4) $("btn-recover-pin-next").click();
+    }
+  });
+  function validateReset(){
+    $("btn-recover-reset").disabled = !(recDots.length >= 4 || recPassOk);
+  }
+  $("btn-recover-pin-next").addEventListener("click", function(){
+    if (recStep !== 1 || pinRecover.value.length < 4) return;
+    recFirst = pinRecover.value;
+    recStep = 2;
+    pinRecover.clear();
+    $("recover-pin-step").textContent = "Enter the same passcode again to confirm.";
+    $("btn-recover-pin-next").style.display = "none";
+    $("btn-recover-pin-reset").style.display = "";
+    setActivePin(pinRecover);
+  });
+  $("btn-recover-pin-reset").addEventListener("click", function(){
+    recStep = 1; recFirst = ""; recPassOk = false; recPassValue = "";
+    pinRecover.clear();
+    $("btn-recover-pin-next").style.display = "none";
+    $("btn-recover-pin-reset").style.display = "none";
+    $("recover-pin-step").textContent = "Choose a new passcode — at least 4 digits.";
+    setActivePin(pinRecover);
+    validateReset();
+  });
+  function setRecoverTab(t){
+    recTab = t;
+    $("recover-code-block").style.display = t === "code" ? "" : "none";
+    $("recover-q-block").style.display = t === "question" ? "" : "none";
+    $("recover-tabs").querySelectorAll("button").forEach(function(b){
+      b.classList.toggle("on", b.getAttribute("data-tab") === t);
+    });
+    animatePane(t === "code" ? $("recover-code-block") : $("recover-q-block"));
+  }
+  $("recover-tabs").querySelectorAll("button").forEach(function(b){
+    b.addEventListener("click", function(){ setRecoverTab(b.getAttribute("data-tab")); });
+  });
+  function setResetTab(t){
+    resetTab = t;
+    $("reset-pattern-block").style.display = t === "pattern" ? "" : "none";
+    $("reset-pass-block").style.display = t === "passcode" ? "" : "none";
+    $("reset-tabs").querySelectorAll("button").forEach(function(b){
+      b.classList.toggle("on", b.getAttribute("data-tab") === t);
+    });
+    animatePane(t === "pattern" ? $("reset-pattern-block") : $("reset-pass-block"));
+    setActivePin(t === "passcode" ? pinRecover : null);
+  }
+  $("reset-tabs").querySelectorAll("button").forEach(function(b){
+    b.addEventListener("click", function(){ setResetTab(b.getAttribute("data-tab")); });
+  });
+  function openRecovery(){
+    recovering = true;
+    $("recover-step1").style.display = "";
+    $("recover-step2").style.display = "none";
+    hideErr("recover-error"); hideErr("reset-error");
+    $("recover-code").value = ""; $("recover-answer").value = "";
+    $("recover-question-text").textContent = (S && S.recoveryQuestion) || "Your security question";
+    recDots = []; padRecover.reset();
+    $("recover-captured").classList.remove("show");
+    $("btn-recover-pin-reset").click();
+    setRecoverTab(S && S.recoveryQuestion ? "question" : "code");
+    if (!S || !S.recoveryQuestion) setRecoverTab("code");
+    setResetTab("pattern");
+    validateReset();
+    showScreen("screen-recovery");
+  }
+  $("login-forgot").addEventListener("click", openRecovery);
+  $("unlock-forgot").addEventListener("click", openRecovery);
+  $("recover-back").addEventListener("click", function(){
+    recovering = false;
+    render();
+  });
+  $("btn-recover-verify").addEventListener("click", function(){
+    if (recTab === "code")
+      post({cmd:"recoverVerify", code: $("recover-code").value});
+    else
+      post({cmd:"recoverVerify", answer: $("recover-answer").value});
+  });
+  $("btn-recover-reset").addEventListener("click", function(){
+    recovering = false;
+    post({cmd:"recoverReset", dots: recDots,
+      passcode: recPassOk ? recPassValue : ""});
+  });
+  ["sw-startup","sw-relock","sw-autolock","sw-sounds","sw-pclock","sw-intruder","sw-encrypt","sw-contextmenu","sw-lite"].forEach(function(id){
+    $(id).addEventListener("change", sendSettings);
+  });
+  $("sw-lite").addEventListener("change", function(){
+    document.body.classList.toggle("lite", this.checked);
+  });
+  $("seg-automins").querySelectorAll("button").forEach(function(b){
+    b.addEventListener("click", function(){
+      autominsVal = parseInt(b.getAttribute("data-mins"), 10) || 0;
+      $("seg-automins").querySelectorAll("button").forEach(function(x){
+        x.classList.toggle("on", x === b);
+      });
+      sendSettings();
+    });
+  });
+  document.querySelectorAll(".navitem").forEach(function(n){
+    n.addEventListener("click", function(){
+      document.querySelectorAll(".navitem").forEach(function(x){ x.classList.remove("active"); });
+      n.classList.add("active");
+      var target = n.getAttribute("data-nav");
+      document.querySelectorAll(".page").forEach(function(p){
+        p.classList.toggle("active", p.id === target);
+      });
+      var main = $("admin-main");
+      if (main) main.scrollTop = 0;
+    });
+  });
+
+  /* developer page: external links + live year */
+  document.querySelectorAll("[data-open]").forEach(function(el){
+    el.addEventListener("click", function(){
+      post({cmd:"openUrl", url: el.getAttribute("data-open")});
+    });
+  });
+  $("copy-year").textContent = new Date().getFullYear();
+
+  /* ---------------- modals / chrome ---------------- */
+  document.querySelectorAll(".overlay").forEach(function(ov){
+    ov.addEventListener("click", function(e){ if (e.target === ov) ov.classList.remove("show"); });
+    ov.querySelectorAll("[data-close]").forEach(function(b){
+      b.addEventListener("click", function(){ ov.classList.remove("show"); });
+    });
+  });
+  document.addEventListener("keydown", function(e){
+    if (e.key === "Escape")
+      document.querySelectorAll(".overlay.show").forEach(function(ov){ ov.classList.remove("show"); });
+  });
+  $("btn-min").addEventListener("click", function(){ post({cmd:"minimize"}); });
+  $("btn-close").addEventListener("click", function(){ post({cmd:"close"}); });
+  document.querySelectorAll("[data-drag]").forEach(function(el){
+    el.addEventListener("mousedown", function(e){
+      if (e.button === 0) post({cmd:"drag"});
+    });
+  });
+  document.addEventListener("contextmenu", function(e){ e.preventDefault(); });
+
+  /* ---------------- state from host ---------------- */
+  function render(){
+    if (!S) return;
+    if (recovering) return; // the recovery screen owns the UI right now
+    if (S.settings){
+      var tc = S.settings.theme || "#6D28D9", t2 = S.settings.theme2 || "", td = !!S.settings.dark;
+      if (tc !== theme.color || t2 !== theme.color2 || td !== theme.dark){
+        theme.color = tc; theme.color2 = t2; theme.dark = td; applyTheme();
+      }
+    }
+    handleFreeze();
+    if (S.mode === "installer"){ showScreen("screen-installer"); renderInstaller(); return; }
+    if (S.mode === "unlock"){
+      if (S.target){
+        $("unlock-name").textContent = S.target.name;
+        $("unlock-path").textContent = S.target.path;
+        var un = $("unlock-note");
+        if (S.target.note){ un.textContent = S.target.note; un.style.display = ""; }
+        else un.style.display = "none";
+        $("unlock-own-hint").textContent = S.target.hasOwn ? " This folder has its own key." : "";
+        var tile = $("unlock-tile");
+        if (S.target.color){
+          tile.style.background = "linear-gradient(135deg," + S.target.color + "," + shade(S.target.color, 26) + ")";
+          tile.innerHTML = '<span class="ltr">' + esc((S.target.name || "F").charAt(0).toUpperCase()) + "</span>";
+        } else {
+          tile.style.background = "";
+          tile.innerHTML = FOLDER_SVG;
+        }
+      }
+      var both = S.hasPattern && S.hasPasscode;
+      $("unlock-tabs").style.display = both ? "" : "none";
+      setUnlockTab(both ? unlockTab : (S.hasPattern ? "pattern" : "passcode"));
+      showScreen("screen-unlock");
+      return;
+    }
+    if (S.setupRequired){ setSetupTab(setupTab); showScreen("screen-setup"); return; }
+    if (!S.authed){
+      var bothL = S.hasPattern && S.hasPasscode;
+      $("login-tabs").style.display = bothL ? "" : "none";
+      setLoginTab(bothL ? loginTab : (S.hasPattern ? "pattern" : "passcode"));
+      $("login-lead").textContent = S.hasPattern && S.hasPasscode
+        ? "Draw your pattern or enter your passcode to open the panel."
+        : (S.hasPattern ? "Draw your pattern to open the panel."
+                        : "Enter your passcode to open the panel.");
+      showScreen("screen-login");
+      return;
+    }
+    showScreen("screen-admin");
+    renderAdmin();
+  }
+  if (window.chrome && window.chrome.webview){
+    window.chrome.webview.addEventListener("message", function(e){
+      var m;
+      try { m = JSON.parse(e.data); } catch(_){ return; }
+      if (m.type === "state"){
+        var prev = S;
+        S = m; render(); hideBusy();
+        if (prev){
+          var before = {};
+          (prev.folders || []).forEach(function(f){ before[f.id] = f.locked; });
+          (m.folders || []).forEach(function(f){
+            if (before[f.id] === false && f.locked === true) sfx("lock");
+            else if (before[f.id] === true && f.locked === false) sfx("unlock");
+            else if (before[f.id] === undefined && f.locked === true && prev.authed) sfx("lock");
+          });
+          if (!prev.authed && m.authed && m.mode !== "unlock") sfx("unlock");
+        }
+      }
+      else if (m.type === "showBusy"){ showBusy(m.text); }
+      else if (m.type === "hideBusy"){ hideBusy(); }
+      else if (m.type === "folderLocked"){
+        hideBusy();
+        showLockedSuccess(m.name || "Folder", m.files || 0, !!m.encrypted, m.lockMode || "just");
+      }
+      else if (m.type === "progress"){
+        /* v4.1.0: preloader bar + the folder row's own bar, both live.
+           A progress message also re-opens the preloader if the add
+           started before the panel finished loading. */
+        if (!$("busy").classList.contains("show")) showBusy(m.text);
+        setBusyProgress(m.text, m.done, m.total);
+        setFolderProgress(m.folderId, m.text, m.done, m.total);
+      }
+      else if (m.type === "sizes"){
+        if (S){
+          var merged = {};
+          var cur = S.sizesMap || {}, inc = m.sizes || {}, k;
+          for (k in cur) merged[k] = cur[k];
+          for (k in inc) merged[k] = inc[k];
+          S.sizesMap = merged;
+          applySizes();
+        }
+      }
+      else if (m.type === "needFolderCreds"){
+        fauthId = m.id; fauthDots = [];
+        padFauth.reset();
+        pinFauth.clear();
+        setActivePin(pinFauth);
+        $("fauth-pass").value = "";
+        hideErr("fauth-error");
+        $("fauth-title").textContent = "Unlock \u201C" + m.name + "\u201D";
+        $("fauth-text").textContent = m.hasPattern && m.hasPasscode
+          ? "This folder has its own pattern and passcode. The panel key works too."
+          : (m.hasPattern ? "This folder has its own pattern. The panel key works too."
+                          : "This folder has its own passcode. The panel key works too.");
+        $("fauth-pad-block").style.display = m.hasPattern ? "" : "none";
+        $("modal-folderauth").classList.add("show");
+      }
+      else if (m.type === "folderCreds"){
+        if (m.ok){ $("modal-folderauth").classList.remove("show"); sfx("unlock"); }
+        else {
+          showErr("fauth-error", "Wrong folder key — please try again.");
+          sfx("error");
+          padFauth.reset(); fauthDots = [];
+          pinFauth.shake(); pinFauth.clear();
+        }
+      }
+      else if (m.type === "installDone"){ hideBusy(); installFinished = true; renderInstaller(); sfx("unlock"); }
+      else if (m.type === "installError"){ hideBusy(); showErr("inst-error", "Install failed: " + m.text); }
+      else if (m.type === "browse"){ browseState = m; renderBrowse(); }
+      else if (m.type === "browseDone"){ $("modal-browse").classList.remove("show"); }
+      else if (m.type === "recoveryCode"){
+        $("recovery-code-text").textContent = m.code;
+        $("recovery-modal-title").textContent = "Recovery code";
+        $("recovery-code-view").style.display = "";
+        $("recovery-q-view").style.display = "none";
+        $("modal-recovery").classList.add("show");
+      }
+      else if (m.type === "recoverResult"){
+        if (m.ok){
+          hideErr("recover-error");
+          $("recover-step1").style.display = "none";
+          $("recover-step2").style.display = "";
+          animatePane($("recover-step2"));
+        } else {
+          showErr("recover-error", "That did not match. Please check and try again.");
+          authFail("recover-error", "recovery-card", null);
+        }
+      }
+      else if (m.type === "updateInfo"){
+        var cur = m.current || (S && S.version) || "";
+        if (!m.ok){
+          if (!m.auto) $("update-status").textContent = "Could not check for updates (no connection). You are running DarkBox v" + cur + ".";
+        } else if (m.latest === cur){
+          $("update-status").textContent = "DarkBox is up to date (v" + cur + ").";
+          $("btn-get-update").style.display = "none";
+        } else {
+          $("update-status").textContent = "DarkBox " + m.latest + " is available — you have v" + cur + "." + (m.notes ? " " + m.notes : "");
+          updateUrl = m.url || "";
+          $("btn-get-update").style.display = updateUrl ? "" : "none";
+          if (m.auto) showToast("DarkBox " + m.latest + " is available in Settings → Updates.", false);
+        }
+      }
+      else if (m.type === "toast"){ showToast(m.text, !!m.error); if (m.error) sfx("error"); }
+      else if (m.type === "authError"){
+        hideBusy();
+        sfx("error");
+        if (!S) return;
+        if (recovering){
+          showErr("reset-error", m.text);
+          authFail("reset-error", "recovery-card", padRecover);
+          pinRecover.shake(); pinRecover.clear();
+          return;
+        }
+        var errId = S.mode === "unlock" ? "unlock-error"
+                  : (S.setupRequired ? "setup-error" : "login-error");
+        var cardId = S.mode === "unlock" ? "unlock-card"
+                  : (S.setupRequired ? "setup-card" : "login-card");
+        var pad = S.mode === "unlock" ? padUnlock : padLogin;
+        showErr(errId, m.text);
+        authFail(errId, cardId, S.mode === "unlock" || !S.authed ? pad : null);
+        if (S.mode !== "unlock"){ $("login-pass").value = ""; pinLogin.shake(); pinLogin.clear(); }
+        else { pinUnlock.shake(); pinUnlock.clear(); }
+      }
+    });
+    applyTheme();
+    post({cmd:"ready"});
+  }
+})();
+</script>
+</body>
+</html>

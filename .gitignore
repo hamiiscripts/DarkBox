@@ -1,0 +1,18 @@
+# DarkBox by Hamii — .gitignore
+# Build outputs
+bin/
+obj/
+pkg/
+build-payload/
+setup-boot/bin/
+setup-boot/obj/
+setup-boot/payload.zip
+*.user
+.vs/
+# Built binaries (releases carry the EXE/ZIP, not the tree)
+*.exe
+*.dll
+*.pdb
+# OS files
+Thumbs.db
+Desktop.ini

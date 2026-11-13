@@ -1,0 +1,78 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net48</TargetFramework>
+    <RootNamespace>HamiiFolderLocker</RootNamespace>
+    <AssemblyName>HamiiFolderLocker</AssemblyName>
+    <ApplicationIcon>app.ico</ApplicationIcon>
+    <!-- v4.1.0: full publisher identity. Windows SmartScreen trusts an EXE
+         far more when it carries a real Company/Product/Copyright and a
+         manifest — an anonymous, unsigned EXE is what triggers the blue
+         "Windows protected your PC / Run anyway" screen on a new PC.
+         This alone does NOT remove SmartScreen: only a code-signing
+         certificate does that (see SIGNING.md). But without these fields
+         even a signed build looks anonymous, so they are required first. -->
+    <Version>4.2.0</Version>
+    <FileVersion>4.2.0.0</FileVersion>
+    <AssemblyVersion>4.2.0.0</AssemblyVersion>
+    <Company>Hamii Scripts</Company>
+    <Product>DarkBox by Hamii</Product>
+    <Copyright>Copyright © 2026 Hamii Scripts</Copyright>
+    <Description>DarkBox by Hamii — lock folders with a pattern or passcode, with AES-256 file encryption.</Description>
+    <AssemblyTitle>DarkBox by Hamii</AssemblyTitle>
+    <ApplicationManifest>src\app.manifest</ApplicationManifest>
+    <LangVersion>7.3</LangVersion>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
+    <Deterministic>true</Deterministic>
+    <DebugType>none</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="src\**\*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="app.ico">
+      <LogicalName>app.ico</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ui.html">
+      <LogicalName>ui.html</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="avatar.jpg">
+      <LogicalName>avatar.jpg</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="logo.png">
+      <LogicalName>logo.png</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="fonts\inter.woff2">
+      <LogicalName>fonts/inter.woff2</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="fonts\fraunces.woff2">
+      <LogicalName>fonts/fraunces.woff2</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="fonts\fraunces-i.woff2">
+      <LogicalName>fonts/fraunces-i.woff2</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2903.40" />
+    <PackageReference Include="DirectShowLib" Version="1.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Device" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="Microsoft.CSharp" />
+  </ItemGroup>
+
+</Project>
